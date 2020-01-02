@@ -4,10 +4,15 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "tsc": "tsc -p . -w"
   },
   "dependencies": {
     "fs-extra": "^8.1.0",
     "smart-buffer": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^13.1.2",
+    "typescript": "^3.7.4"
   }
 }
