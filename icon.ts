@@ -1,6 +1,7 @@
 import fs from "fs-extra"
 import path from "path"
 import { SmartBuffer } from "smart-buffer"
+import { OverflowingAdd } from "./utils"
 import Jimp from "jimp"
 
 export interface PESection {
@@ -41,18 +42,7 @@ const WriteArray = function(buff: SmartBuffer, arr: Array<number>): void {
 		buff.writeUInt8(arr[i]);
 }
 
-const OverflowingAddU8 = function(n1: number, n2: number): [number, boolean] {
-	const max: number = 256;
-	let overflow: boolean = false;
-	n1 += n2;
-	while(n1 >= max){
-		n1 -= max;
-		overflow = true;
-	}
-	return [n1, overflow];
-}
-
-export const findIcons = function(exe: SmartBuffer, sections: Array<PESection>): [Array<WindowsIcon>, Array<number>] {
+export const FindIcons = function(exe: SmartBuffer, sections: Array<PESection>): [Array<WindowsIcon>, Array<number>] {
 	const rsrcBase: number = exe.readOffset;
 	exe.readOffset += 12;
 	const nameCount: number = exe.readUInt16LE();
@@ -93,7 +83,7 @@ export const findIcons = function(exe: SmartBuffer, sections: Array<PESection>):
 			exe.readOffset = leaf+rsrcBase;
 			const rva: number = exe.readUInt32LE();
 			const size: number = exe.readUInt32LE();
-			const v: Array<number> = extractVirtualBytes(exe, sections, rva, size);
+			const v: Array<number> = ExtractVirtualBytes(exe, sections, rva, size);
 			if(v !== null){
 				const icoHeader: SmartBuffer = SmartBuffer.fromBuffer(Buffer.from(v));
 				icoHeader.readOffset += 4;
@@ -116,10 +106,10 @@ export const findIcons = function(exe: SmartBuffer, sections: Array<PESection>):
 					const ordinal: number = icoHeader.readUInt16LE();
 					for(const icon of icons){
 						if(icon[0] == ordinal && icon[2] >= 40){
-							const v2: Array<number> = extractVirtualBytes(exe, sections, icon[1], icon[2]);
+							const v2: Array<number> = ExtractVirtualBytes(exe, sections, icon[1], icon[2]);
 							if(v2 !== null){
 								WriteArray(rawFileBody, v2);
-								const i: WindowsIcon = makeIcon(width, height, v2);
+								const i: WindowsIcon = MakeIcon(width, height, v2);
 								if(i !== null){
 									for(let k = 0; k < i.bgraData.length; k += 4){
 										const a: number = i.bgraData[k];
@@ -141,7 +131,7 @@ export const findIcons = function(exe: SmartBuffer, sections: Array<PESection>):
 	return [[], []];
 }
 
-const makeIcon = function(width: number, height: number, blob: Array<number>): WindowsIcon {
+const MakeIcon = function(width: number, height: number, blob: Array<number>): WindowsIcon {
 	const data: SmartBuffer = SmartBuffer.fromBuffer(Buffer.from(blob));
 	const dataStart = data.readUInt32LE();
 	data.readOffset = 14;
@@ -172,7 +162,7 @@ const makeIcon = function(width: number, height: number, blob: Array<number>): W
 			while(cursor+4*8 <= bgraData.length){
 				let bitmask: number = data.readUInt8();
 				for(let i: number = 0; i < 8; ++i){
-					const [m, b] = OverflowingAddU8(bitmask, bitmask);
+					const [m, b] = OverflowingAdd(bitmask, bitmask, 8);
 					bitmask = m;
 					bgraData.internalBuffer[cursor+3] = b ? 0x0 : 0xFF;
 					cursor += 4;
@@ -181,7 +171,7 @@ const makeIcon = function(width: number, height: number, blob: Array<number>): W
 			if(cursor < bgraData.length){
 				let bitmask: number = data.readUInt8();
 				while(cursor < bgraData.length){
-					const [m, b] = OverflowingAddU8(bitmask, bitmask);
+					const [m, b] = OverflowingAdd(bitmask, bitmask, 8);
 					bitmask = m;
 					bgraData.internalBuffer[cursor+3] = b ? 0x0 : 0xFF;
 					cursor += 4;
@@ -197,7 +187,7 @@ const makeIcon = function(width: number, height: number, blob: Array<number>): W
 	return null;
 }
 
-const extractVirtualBytes = function(exe: SmartBuffer, sections: Array<PESection>, rva: number, size: number): Array<number> {
+const ExtractVirtualBytes = function(exe: SmartBuffer, sections: Array<PESection>, rva: number, size: number): Array<number> {
 	for(const section of sections){
 		if(rva >= section.virtualAddress && rva+size < section.virtualAddress+section.virtualSize){
 			const offsetOnDisk: number = rva-section.virtualAddress;

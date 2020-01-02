@@ -1,10 +1,12 @@
 import fs from "fs-extra"
 import path from "path"
 import { SmartBuffer } from "smart-buffer"
-import { PESection, WindowsIcon, findIcons, SaveIcon } from "./icon"
+import { PESection, WindowsIcon, FindIcons, SaveIcon } from "./icon"
+import { GameVersion, FindGameData } from "./gamedata"
 
 const main = async () => {
-	const input: string = path.join(__dirname, "tests", "k3.exe");
+	const input: string = path.join(__dirname, "tests", "k2.exe");
+	const output: string = path.join(__dirname, "tests", "diva2.exe");
 	if(!await fs.exists(input))
 		throw new Error("The input file does not exist.");
 	const exe: SmartBuffer = SmartBuffer.fromBuffer(await fs.readFile(input));
@@ -24,10 +26,10 @@ const main = async () => {
 	const sections: Array<PESection> = [];
 	for(let i: number = 0; i < sectionCount; ++i){
 		let sectionName: Buffer = exe.readBuffer(8);
-		const virtualSize = exe.readUInt32LE();
-		const virtualAddress = exe.readUInt32LE();
-		const diskSize = exe.readUInt32LE();
-		const diskAddress = exe.readUInt32LE();
+		const virtualSize: number = exe.readUInt32LE();
+		const virtualAddress: number = exe.readUInt32LE();
+		const diskSize: number = exe.readUInt32LE();
+		const diskAddress: number = exe.readUInt32LE();
 		exe.readOffset += 16;
 		if(sectionName.compare(Buffer.from([0x55, 0x50, 0x58, 0x30, 0x00, 0x00, 0x00, 0x00])) == 0)
 			upx0VirtualLength = virtualSize;
@@ -47,9 +49,17 @@ const main = async () => {
 	if(rsrcLocation !== null){
 		const readOffsetBackup = exe.readOffset;
 		exe.readOffset = rsrcLocation;
-		[iconData, icoFileRaw] = findIcons(exe, sections);
+		[iconData, icoFileRaw] = FindIcons(exe, sections);
+		exe.readOffset = readOffsetBackup;
+		await SaveIcon(iconData, path.join(__dirname, "tests", "issou"));
 	}
-	await SaveIcon(iconData, path.join(__dirname, "tests", "issou"));
+	let upxData: [number, number] = null;
+	if(upx0VirtualLength !== null && upx1Data !== null)
+		upxData = [upx0VirtualLength+upx1Data[0], upx1Data[1]];
+	const gameVer: GameVersion = FindGameData(exe, upxData);
+	console.log(GameVersion[gameVer]);
+	console.log("Writing file");
+	await fs.writeFile(output, exe.internalBuffer);
 	console.log("Ended parsing!");
 }
 
