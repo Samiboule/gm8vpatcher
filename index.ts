@@ -1,10 +1,10 @@
 import fs from "fs-extra"
 import path from "path"
-import { SmartBuffer } from "smart-buffer";
-import { PESection, WindowsIcon, findIcons } from "./icon";
+import { SmartBuffer } from "smart-buffer"
+import { PESection, WindowsIcon, findIcons, SaveIcon } from "./icon"
 
 const main = async () => {
-	const input: string = path.join(__dirname, "tests", "minimal.exe");
+	const input: string = path.join(__dirname, "tests", "k3.exe");
 	if(!await fs.exists(input))
 		throw new Error("The input file does not exist.");
 	const exe: SmartBuffer = SmartBuffer.fromBuffer(await fs.readFile(input));
@@ -29,15 +29,12 @@ const main = async () => {
 		const diskSize = exe.readUInt32LE();
 		const diskAddress = exe.readUInt32LE();
 		exe.readOffset += 16;
-		if(sectionName.compare(Uint8Array.from([0x55, 0x50, 0x58, 0x30, 0x00, 0x00, 0x00, 0x00])) == 0){
+		if(sectionName.compare(Buffer.from([0x55, 0x50, 0x58, 0x30, 0x00, 0x00, 0x00, 0x00])) == 0)
 			upx0VirtualLength = virtualSize;
-		}
-		if(sectionName.compare(Uint8Array.from([0x55, 0x50, 0x58, 0x31, 0x00, 0x00, 0x00, 0x00])) == 0){
+		if(sectionName.compare(Buffer.from([0x55, 0x50, 0x58, 0x31, 0x00, 0x00, 0x00, 0x00])) == 0)
 			upx1Data = [virtualSize, diskAddress];
-		}
-		if(sectionName.compare(Uint8Array.from([0x2E, 0x72, 0x73, 0x72, 0x63, 0x00, 0x00, 0x00])) == 0){
+		if(sectionName.compare(Buffer.from([0x2E, 0x72, 0x73, 0x72, 0x63, 0x00, 0x00, 0x00])) == 0)
 			rsrcLocation = diskAddress;
-		}
 		sections.push({
 			virtualSize: virtualSize,
 			virtualAddress: virtualAddress,
@@ -46,19 +43,14 @@ const main = async () => {
 		});
 	}
 	let iconData: Array<WindowsIcon> = [];
-	let icoFileRaw: Uint8Array = Uint8Array.from([]);
+	let icoFileRaw: Array<number> = [];
 	if(rsrcLocation !== null){
 		const readOffsetBackup = exe.readOffset;
 		exe.readOffset = rsrcLocation;
 		[iconData, icoFileRaw] = findIcons(exe, sections);
 	}
-	console.log(iconData.map(icon => {
-		return {
-			width: icon.width,
-			height: icon.height,
-		}
-	}));
-	console.log("Done!");
+	await SaveIcon(iconData, path.join(__dirname, "tests", "issou"));
+	console.log("Ended parsing!");
 }
 
 main().catch(console.error);
