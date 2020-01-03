@@ -8,12 +8,11 @@ export enum GameVersion {
 }
 
 export class GameData {
-    public static find(exe: SmartBuffer, upxData: [number, number]): GameVersion {
+    public static decrypt(exe: SmartBuffer, upxData: [number, number]): GameVersion {
         if(upxData !== null){
             const maxSize: number = upxData[0];
             const diskOffset: number = upxData[1];
             const unpacked: SmartBuffer = SmartBuffer.fromBuffer(Buffer.from(Unpack(exe, maxSize, diskOffset)));
-            console.log(`Successfully unpacked UPX - output is ${unpacked.length} bytes`);
             let antidecSettings: AntidecMetadata = Antidec.check80(unpacked);
             if(antidecSettings !== null){
                 if(Antidec.decrypt(exe, antidecSettings)){
@@ -35,6 +34,27 @@ export class GameData {
             console.log("null");
         }
         return GameVersion.GameMaker80;
+    }
+    public static encrypt(exe: SmartBuffer, upxData: [number, number]): void {
+        if(upxData !== null){
+            const maxSize: number = upxData[0];
+            const diskOffset: number = upxData[1];
+            const unpacked: SmartBuffer = SmartBuffer.fromBuffer(Buffer.from(Unpack(exe, maxSize, diskOffset)));
+            let antidecSettings: AntidecMetadata = Antidec.check80(unpacked);
+            if(antidecSettings !== null){
+                Antidec.encrypt(exe, antidecSettings);
+                return;
+            }
+            antidecSettings = Antidec.check81(unpacked);
+            if(antidecSettings !== null){
+                // TODO: Do GM81 encryption if the header is found
+                Antidec.encrypt(exe, antidecSettings);
+                return;
+            }
+            throw new Error("Unknown format");
+        }else{
+            console.log("null");
+        }
     }
 }
 

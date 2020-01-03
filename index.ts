@@ -3,6 +3,7 @@ import path from "path"
 import { SmartBuffer } from "smart-buffer"
 import { PESection, WindowsIcon, Icon } from "./icon"
 import { GameVersion, GameData } from "./gamedata"
+import { Settings } from "./settings"
 
 const main = async () => {
 	const input: string = path.join(__dirname, "tests", "k2.exe");
@@ -56,8 +57,19 @@ const main = async () => {
 	let upxData: [number, number] = null;
 	if(upx0VirtualLength !== null && upx1Data !== null)
 		upxData = [upx0VirtualLength+upx1Data[0], upx1Data[1]];
-	const gameVer: GameVersion = GameData.find(exe, upxData);
+	const gameVer: GameVersion = GameData.decrypt(exe, upxData);
 	console.log(GameVersion[gameVer]);
+	const settingsLength: number = exe.readUInt32LE();
+	const settingsStart: number = exe.readOffset;
+	const settings: Settings = Settings.load(exe, gameVer, settingsStart, settingsLength);
+	// TODO: check why scaling of 0 does not work
+	settings.scaling = -1;
+	// 
+	settings.showErrorMessage = false;
+	settings.logErrors = false;
+	settings.save(exe, gameVer, settingsStart, settingsLength);
+	console.log("Encrypting back");
+	GameData.encrypt(exe, upxData);
 	console.log("Writing file");
 	await fs.writeFile(output, exe.internalBuffer);
 	console.log("Ended parsing!");
