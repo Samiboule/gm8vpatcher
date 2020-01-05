@@ -123,7 +123,11 @@ export class Icon {
 						}
 					}
 					rawFile.writeBuffer(rawFileBody.toBuffer());
-					return [iconGroup, [...rawFile.toBuffer()]];
+					const res: [Array<WindowsIcon>, Array<number>] = [iconGroup, [...rawFile.toBuffer()]]
+					icoHeader.destroy();
+					rawFile.destroy();
+					rawFileBody.destroy();
+					return res;
 				}
 			}
 		}
@@ -139,6 +143,7 @@ export class Icon {
 		switch(bpp){
 			case 32:
 				const d: Buffer = data.toBuffer().subarray(dataStart, dataStart+width*height*4);
+				data.destroy();
 				if(d !== null)
 					return {
 						width: icoWH(width),
@@ -175,13 +180,17 @@ export class Icon {
 						cursor += 4;
 					}
 				}
-				return {
+				const res: WindowsIcon = {
 					width: icoWH(width),
 					height: icoWH(height),
 					originalBPP: bpp,
 					bgraData: [...bgraData.toBuffer()],
 				}
+				data.destroy();
+				bgraData.destroy();
+				return res;
 		}
+		data.destroy();
 		return null;
 	}
 	private static extractVirtualBytes(exe: SmartBuffer, sections: Array<PESection>, rva: number, size: number): Array<number> {

@@ -63,7 +63,9 @@ const main = async () => {
 	const settingsStart: number = exe.readOffset;
 	const settings: Settings = Settings.load(exe, gameVer, settingsStart, settingsLength);
 	// TODO: check why scaling of 0 does not work
-	settings.scaling = -1;
+	// settings.displayCursor = false;
+	// settings.dontDrawBorder = true;
+	settings.scaling = 0;
 	// 
 	settings.showErrorMessage = false;
 	settings.logErrors = false;
@@ -71,7 +73,7 @@ const main = async () => {
 	console.log("Encrypting back");
 	GameData.encrypt(exe, upxData);
 	console.log("Writing file");
-	await fs.writeFile(output, exe.internalBuffer);
+	await fs.writeFile(output, exe.toBuffer());
 	console.log("Ended parsing!");
 }
 

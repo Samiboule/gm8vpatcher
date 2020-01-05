@@ -43,13 +43,13 @@ export class Settings {
 			if(data.readUInt32LE() != 0){
 				const length2: number = data.readUInt32LE();
 				const start2: number = data.readOffset;
-				const result: Buffer = zlib.inflateSync(data.internalBuffer.subarray(start2, start2+length2));
+				const result: Buffer = zlib.inflateSync(data.toBuffer().subarray(start2, start2+length2));
 				data.readOffset += length2;
 				return [...result];
 			}
 			return null;
 		}
-		const data: SmartBuffer = SmartBuffer.fromBuffer(zlib.inflateSync(exe.internalBuffer.subarray(start, start+length)));
+		const data: SmartBuffer = SmartBuffer.fromBuffer(zlib.inflateSync(exe.toBuffer().subarray(start, start+length)));
 		const settings: Settings = new Settings();
 		settings.fullscreen = data.readUInt32LE() != 0;
 		settings.interpolatePixels = data.readUInt32LE() != 0;
@@ -155,9 +155,10 @@ export class Settings {
 				data.writeUInt32LE(Number(this.zeroUninitializedVars)+2*Number(this.errorOnUninitializedArgs));
 				break;
 		}
-		const part1: Buffer = exe.internalBuffer.subarray(0, start);
-		const part2: Buffer = exe.internalBuffer.subarray(start+length, exe.length);
+		const part1: Buffer = exe.toBuffer().subarray(0, start);
+		const part2: Buffer = exe.toBuffer().subarray(start+length, exe.length);
 		const compressedData: Buffer = zlib.deflateSync(data.toBuffer());
+		data.destroy();
 		exe.clear();
 		exe.writeOffset = 0;
 		exe.writeBuffer(Buffer.from([...part1, ...compressedData, ...part2]));
