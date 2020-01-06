@@ -6,7 +6,7 @@ import { GameVersion, GameData } from "./gamedata"
 import { Settings } from "./settings"
 
 const main = async () => {
-	const input: string = path.join(__dirname, "tests", "k2.exe");
+	const input: string = path.join(__dirname, "tests", "k3.exe");
 	const output: string = path.join(__dirname, "tests", "k2_modded.exe");
 	if(!await fs.exists(input))
 		throw new Error("The input file does not exist");
@@ -62,15 +62,16 @@ const main = async () => {
 	const settingsLength: number = exe.readUInt32LE();
 	const settingsStart: number = exe.readOffset;
 	const settings: Settings = Settings.load(exe, gameVer, settingsStart, settingsLength);
-	settings.showErrorMessage = false;
-	settings.logErrors = false;
-	settings.scaling = 0;
-	settings.save(exe, gameVer, settingsStart, settingsLength);
-	console.log("Encrypting back");
-	GameData.encrypt(exe, upxData);
-	console.log("Writing file");
-	await fs.writeFile(output, exe.toBuffer());
-	console.log("Ended parsing!");
+	// settings.showErrorMessage = false;
+	// settings.logErrors = false;
+	// settings.scaling = 0;
+	console.log(settings);
+	// settings.save(exe, gameVer, settingsStart, settingsLength);
+	// console.log("Encrypting back");
+	// GameData.encrypt(exe, upxData);
+	// console.log("Writing file");
+	// await fs.writeFile(output, exe.toBuffer());
+	// console.log("Ended parsing!");
 }
 
 main().catch(console.error);
