@@ -1,5 +1,5 @@
 import { SmartBuffer } from "smart-buffer"
-import { Tuple } from "../utils"
+import { Utils } from "../utils"
 
 export enum XorMethod {
 	Normal,
@@ -34,6 +34,7 @@ export class GM81 {
 				exe.readOffset += 8;
 			}
 			GM81.decrypt(exe, xorMethod);
+			exe.readOffset += 20;
 			return true;
 		}
 		return false;
@@ -66,7 +67,7 @@ export class GM81 {
 		const crc32 = function(hashKey: Array<number>, crcTable: Array<number>): number {
 			let result: number = 0xFFFFFFFF;
 			for(const c of hashKey)
-				result = ((result >> 8) ^ crcTable[((result & 0xFF) ^ c) >>> 0]) >>> 0;
+				result = ((result >>> 8) ^ crcTable[((result & 0xFF) ^ c) >>> 0]) >>> 0;
 			return result;
 		}
 		const crc32Reflect = function(value: number, c: number): number {
@@ -89,49 +90,92 @@ export class GM81 {
 			crcTable[i] = (crc32Reflect(i, 8) << 24) >>> 0;
 			for(let j: number = 0; j < 8; ++j){
 				let xorMask: number = 0;
-				if((crcTable[i] & (1 << 31)) >>> 0 != 0))
+				if((crcTable[i] & (1 << 31)) >>> 0 != 0)
 					xorMask = crcPolynomial;
 				crcTable[i] = ((crcTable[i] << 1) ^ xorMask) >>> 0;
 			}
-			crcTable[i] = crc32Reflect(i, 32);
+			crcTable[i] = crc32Reflect(crcTable[i], 32);
 		}
-		// CONTINUE HERE
-		// get our two seeds for generating xor masks
-		let seed1 = data.read_u32_le()?;
-		let seed2 = crc_32(&hash_key_utf16, &crc_table);
-		// work out where gm81 encryption starts
-		let encryption_start = data.position() + u64::from(seed2 & 0xFF) + 10;
-		// Make the seed-cycling iterator
-		let mut generator = match xor_method {
-			XorMethod::Normal => {
-				Box::new(NormalMaskGenerator { seed1, seed2 }) as Box<dyn Iterator<Item = u32>>
+		const seed1: number = exe.readUInt32LE();
+		const seed2: number = crc32(hashKeyUTF16, crcTable);
+		const encryptionStart: number = exe.readOffset+((seed2 & 0xFF) >>> 0)+10;
+		const offsetBackup: number = exe.readOffset;
+		let generator: MaskGenerator;
+		if(xorMethod == XorMethod.Normal){
+			generator = new MaskGenerator(seed1, seed2);
+		}else{
+			const maskData: Array<number> = [...exe.internalBuffer.slice(0, sudalvMagicPoint+4)];
+			const rChunksMaskData: Array<[number, number]> = [];
+			for(let i: number = maskData.length-2; i >= 0; i -= 2)
+				rChunksMaskData.push([maskData[i], maskData[i+1]]);
+			const maskCountArray: Array<[[number, number], [number, number]]> = [];
+			for(let i: number = 1; i < rChunksMaskData.length; ++i)
+				maskCountArray.push([rChunksMaskData[i], rChunksMaskData[i-1]]);
+			let maskCount: number = null;
+			for(let i: number = 0; i < maskCountArray.length; ++i){
+				const a: number = maskCountArray[i][0][0];
+				const b: number = maskCountArray[i][0][1];
+				const c: number = maskCountArray[i][1][0];
+				const d: number = maskCountArray[i][1][1];
+				if(a == 0 && b == 0 && c == 0 && d == 0){
+					maskCount = i;
+					break;
+				}
 			}
-			XorMethod::Sudalv => {
-				let mask_data = &data.get_ref()[..(sudalv_magic_point + 4) as usize];
-				let mask_count = mask_data
-					.rchunks_exact(2)
-					.skip(1)
-					.zip(mask_data.rchunks_exact(2))
-					.position(|xy| xy == (&[0, 0], &[0, 0]))
-					.unwrap();
-				let iter = mask_data
-					.rchunks_exact(2)
-					.skip(1)
-					.map(|x| u16::from_le_bytes([x[0], x[1]]))
-					.take(mask_count + 1)
-					.collect::<Vec<u16>>()
-					.into_iter()
-					.cycle();
-				Box::new(SudalvMaskGenerator { seed1, seed2, iter }) as Box<dyn Iterator<Item = u32>>
+			if(maskCount === null)
+				throw new Error("Unable to find the maskCount");
+			const iter: Array<number> = [];
+			const tmpBuffer: SmartBuffer = new SmartBuffer();
+			for(let i: number = 1; i < maskCount+2; ++i){
+				const x: [number, number] = rChunksMaskData[i];
+				tmpBuffer.writeOffset = 0;
+				tmpBuffer.writeUInt8(x[0]);
+				tmpBuffer.writeUInt8(x[1]);
+				tmpBuffer.readOffset = 0;
+				iter.push(tmpBuffer.readUInt16LE());
+				tmpBuffer.clear();
 			}
-		};
-		// Decrypt stream from encryption_start
-		let game_data = &mut data.get_mut()[encryption_start as usize..];
-		for chunk in game_data
-			.chunks_exact_mut(4)
-			.map(|s| unsafe { &mut *(s as *mut _ as *mut u32) })
-		{
-			*chunk ^= generator.next().unwrap();
+			tmpBuffer.destroy();
+			generator = new MaskGenerator(seed1, seed2, iter);
 		}
+		for(let loopOffset: number = encryptionStart; loopOffset <= exe.length-4; loopOffset += 4){
+			exe.readOffset = loopOffset;
+			exe.writeOffset = loopOffset;
+			let chunk: number = exe.readUInt32LE();
+			chunk = (chunk ^ generator.next()) >>> 0;
+			exe.writeUInt32LE(chunk);
+		}
+		exe.readOffset = offsetBackup;
+	}
+}
+
+class MaskGenerator {
+	private seed1: number;
+	private seed2: number;
+	private iter: Array<number>;
+	private index: number;
+	constructor(seed1: number, seed2: number, iter: Array<number> = null){
+		this.seed1 = seed1;
+		this.seed2 = seed2;
+		this.iter = iter;
+		this.index = 0;
+	}
+	public next(): number {
+		let n1: number = 0x9069;
+		let n2: number = 0x4650;
+		if(this.iter !== null){
+			n1 = this.iterNext();
+			n2 = this.iterNext();
+		}
+		this.seed1 = ((0xFFFF & this.seed1) >>> 0)*n1+(this.seed1 >>> 16);
+		this.seed2 = ((0xFFFF & this.seed2) >>> 0)*n2+(this.seed2 >>> 16);
+		const result: number = ((this.seed1 << 16) >>> 0)+((this.seed2 & 0xFFFF) >>> 0);
+		return result;
+	}
+	public iterNext(): number {
+		const result: number = this.iter[this.index++];
+		if(this.index >= this.iter.length)
+			this.index = 0;
+		return result;
 	}
 }
