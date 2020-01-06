@@ -6,7 +6,7 @@ import { GameVersion, GameData } from "./gamedata"
 import { Settings } from "./settings"
 
 const main = async () => {
-	const name: string = "diva";
+	const name: string = "k2";
 	const input: string = path.join(__dirname, "tests", `${name}.exe`);
 	const output: string = path.join(__dirname, "tests", `${name}_modded.exe`);
 	if(!await fs.exists(input))
