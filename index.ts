@@ -2,11 +2,12 @@ import fs from "fs-extra"
 import path from "path"
 import { SmartBuffer } from "smart-buffer"
 import { PESection, WindowsIcon, Icon } from "./icon"
-import { GameVersion, GameData } from "./gamedata"
+import { GameConfig, GameData } from "./gamedata"
+import { GM80 } from "./gamedata/gm80"
 import { Settings } from "./settings"
 
 const main = async () => {
-	const name: string = "k2";
+	const name: string = "k3";
 	const input: string = path.join(__dirname, "tests", `${name}.exe`);
 	const output: string = path.join(__dirname, "tests", `${name}_modded.exe`);
 	if(!await fs.exists(input))
@@ -58,18 +59,31 @@ const main = async () => {
 	let upxData: [number, number] = null;
 	if(upx0VirtualLength !== null && upx1Data !== null)
 		upxData = [upx0VirtualLength+upx1Data[0], upx1Data[1]];
-	const gameVer: GameVersion = GameData.decrypt(exe, upxData);
-	console.log(GameVersion[gameVer]);
+	const gameConfig: GameConfig = GameData.decrypt(exe, upxData);
 	const settingsLength: number = exe.readUInt32LE();
 	const settingsStart: number = exe.readOffset;
-	const settings: Settings = Settings.load(exe, gameVer, settingsStart, settingsLength);
+	const settings: Settings = Settings.load(exe, gameConfig, settingsStart, settingsLength);
 	settings.showErrorMessage = false;
 	settings.logErrors = false;
 	settings.scaling = 0;
-	// console.log(settings);
-	settings.save(exe, gameVer, settingsStart, settingsLength);
+	settings.f4FullscreenToggle = true;
+	const dllNameLength: number = exe.readUInt32LE();
+	exe.readOffset += dllNameLength;
+	const dxDll: Array<number> = [...exe.readBuffer(exe.readUInt32LE())];
+	const encryptionStartGM80: number = exe.readOffset;
+	GM80.decrypt(exe);
+	const garbageDWords = exe.readUInt32LE();
+	exe.readOffset += garbageDWords*4;
+	exe.writeOffset = exe.readOffset;
+	exe.writeUInt32LE(1);
+	const proFlag: boolean = exe.readUInt32LE() != 0;
+	const gameID: number = exe.readUInt32LE();
+	// 
+	exe.readOffset = encryptionStartGM80;
+	GM80.encrypt(exe);
+	settings.save(exe);
 	console.log("Encrypting back");
-	GameData.encrypt(exe, upxData);
+	GameData.encrypt(exe, gameConfig);
 	console.log("Writing file");
 	await fs.writeFile(output, exe.toBuffer());
 }

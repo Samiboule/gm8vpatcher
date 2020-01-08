@@ -1,6 +1,6 @@
 import { SmartBuffer } from "smart-buffer"
 import zlib from "zlib"
-import { GameVersion } from "./gamedata"
+import { GameConfig, GameVersion } from "./gamedata"
 
 export class Settings {
 	public fullscreen: boolean;
@@ -38,7 +38,10 @@ export class Settings {
 	public alwaysAbort: boolean;
 	public zeroUninitializedVars: boolean;
 	public errorOnUninitializedArgs: boolean;
-	public static load(exe: SmartBuffer, version: GameVersion, start: number, length: number): Settings {
+	private version: GameVersion;
+	private start: number;
+	private length: number;
+	public static load(exe: SmartBuffer, gameConfig: GameConfig, start: number, length: number): Settings {
 		const readDataMaybe = function(data: SmartBuffer): Array<number> {
 			if(data.readUInt32LE() != 0){
 				const length2: number = data.readUInt32LE();
@@ -51,6 +54,9 @@ export class Settings {
 		}
 		const data: SmartBuffer = SmartBuffer.fromBuffer(zlib.inflateSync(exe.toBuffer().subarray(start, start+length)));
 		const settings: Settings = new Settings();
+		settings.version = gameConfig.version;
+		settings.start = start;
+		settings.length = length;
 		settings.fullscreen = data.readUInt32LE() != 0;
 		settings.interpolatePixels = data.readUInt32LE() != 0;
 		settings.dontDrawBorder = data.readUInt32LE() != 0;
@@ -90,7 +96,7 @@ export class Settings {
 		settings.logErrors = data.readUInt32LE() != 0;
 		settings.alwaysAbort = data.readUInt32LE() != 0;
 		const x: number = data.readUInt32LE();
-		switch(version){
+		switch(settings.version){
 			case GameVersion.GameMaker80:
 				settings.zeroUninitializedVars = x != 0;
 				settings.errorOnUninitializedArgs = true;
@@ -100,11 +106,11 @@ export class Settings {
 				settings.errorOnUninitializedArgs = (x & 2) >>> 0 != 0;
 				break;
 		}
-		exe.readOffset = start+length;
+		exe.readOffset = settings.start+settings.length;
 		exe.writeOffset = exe.readOffset;
 		return settings;
 	}
-	public save(exe: SmartBuffer, version: GameVersion, start: number, length: number): void {
+	public save(exe: SmartBuffer): void {
 		const writeDataMaybe = function(data: SmartBuffer, value: Array<number>): void {
 			data.writeUInt32LE(1);
 			const compressed: Buffer = zlib.deflateSync(Buffer.from(value));
@@ -147,7 +153,7 @@ export class Settings {
 		data.writeUInt32LE(Number(this.showErrorMessage));
 		data.writeUInt32LE(Number(this.logErrors));
 		data.writeUInt32LE(Number(this.alwaysAbort));
-		switch(version){
+		switch(this.version){
 			case GameVersion.GameMaker80:
 				data.writeUInt32LE(Number(this.zeroUninitializedVars));
 				break;
@@ -155,14 +161,14 @@ export class Settings {
 				data.writeUInt32LE(Number(this.zeroUninitializedVars)+2*Number(this.errorOnUninitializedArgs));
 				break;
 		}
-		const part1: Buffer = exe.toBuffer().subarray(0, start);
-		const part2: Buffer = exe.toBuffer().subarray(start+length, exe.length);
+		const part1: Buffer = exe.toBuffer().subarray(0, this.start);
+		const part2: Buffer = exe.toBuffer().subarray(this.start+this.length, exe.length);
 		const compressedData: Buffer = zlib.deflateSync(data.toBuffer());
 		data.destroy();
 		exe.clear();
 		exe.writeOffset = 0;
 		exe.writeBuffer(Buffer.from([...part1, ...compressedData, ...part2]));
-		exe.writeOffset = start-4;
+		exe.writeOffset = this.start-4;
 		exe.writeUInt32LE(compressedData.length);
 		exe.readOffset = compressedData.length;
 		exe.writeOffset = exe.readOffset;

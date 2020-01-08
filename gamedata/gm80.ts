@@ -1,4 +1,5 @@
 import { SmartBuffer } from "smart-buffer"
+import { Utils } from "../utils"
 
 export class GM80 {
 	public static check(exe: SmartBuffer): boolean {
@@ -52,7 +53,7 @@ export class GM80 {
 				exe.readOffset += 4;
 			}else{
 				while(true){
-					if(exe.readOffset+4 > length)
+					if(exe.readOffset+4 > exe.length)
 						return false;
 					const header1: number = exe.readUInt32LE();
 					if(header1 == gm80Magic)
@@ -72,5 +73,62 @@ export class GM80 {
 			return true;
 		}
 		return false;
+	}
+	public static decrypt(exe: SmartBuffer): void {
+		const reverseTable: Array<number> = new Array(256).fill(0);
+		const garbageSize1: number = exe.readUInt32LE()*4;
+		const garbageSize2: number = exe.readUInt32LE()*4;
+		exe.readOffset += garbageSize1;
+		const swapTable: Array<number> = [...exe.readBuffer(256)];
+		exe.readOffset += garbageSize2;
+		for(let i: number = 0; i < 256; ++i)
+			reverseTable[swapTable[i]] = i;
+		const length: number = exe.readUInt32LE();
+		const pos: number = exe.readOffset;
+		for(let i: number = length+pos; i > pos; --i){
+			exe.internalBuffer[i-1] = Utils.overflowingSub(
+				reverseTable[exe.internalBuffer[i-1]],
+				Utils.overflowingAdd(
+					exe.internalBuffer[i-2],
+					Utils.overflowingSub(
+						i,
+						pos+1,
+					8)[0],
+				8)[0],
+			8)[0];
+		}
+		for(let i: number = pos+length-1; i >= pos; --i){
+			const b: number = Math.max(i-swapTable[((i-pos) & 0xFF) >>> 0], pos);
+			const a: number = exe.internalBuffer[i];
+			exe.internalBuffer[i] = exe.internalBuffer[b];
+			exe.internalBuffer[b] = a;
+		}
+	}
+	public static encrypt(exe: SmartBuffer): void {
+		const reverseTable: Array<number> = new Array(256).fill(0);
+		const garbageSize1: number = exe.readUInt32LE()*4;
+		const garbageSize2: number = exe.readUInt32LE()*4;
+		exe.readOffset += garbageSize1;
+		const swapTable: Array<number> = [...exe.readBuffer(256)];
+		exe.readOffset += garbageSize2;
+		for(let i: number = 0; i < 256; ++i)
+			reverseTable[swapTable[i]] = i;
+		const length: number = exe.readUInt32LE();
+		const pos: number = exe.readOffset;
+		for(let i: number = pos; i < pos+length; ++i){
+			const b: number = Math.max(i-swapTable[((i-pos) & 0xFF) >>> 0], pos);
+			const a: number = exe.internalBuffer[i];
+			exe.internalBuffer[i] = exe.internalBuffer[b];
+			exe.internalBuffer[b] = a;
+		}
+		for(let i: number = pos; i < pos+length; ++i){
+			exe.internalBuffer[i] = swapTable[Utils.overflowingAdd(
+				exe.internalBuffer[i],
+				Utils.overflowingAdd(
+					i-pos,
+					exe.internalBuffer[i-1],
+				8)[0],
+			8)[0]];
+		}
 	}
 }
