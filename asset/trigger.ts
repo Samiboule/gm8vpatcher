@@ -1,5 +1,4 @@
 import { Asset } from "../asset"
-import { GameConfig } from "../gamedata"
 import { SmartBuffer } from "smart-buffer"
 
 const VERSION: number = 800;
@@ -27,7 +26,7 @@ export class Trigger extends Asset {
 	public condition: string;
 	public moment: TriggerKind;
 	public constantName: string;
-	public static deserialize(data: SmartBuffer, config: GameConfig): Trigger {
+	public static deserialize(data: SmartBuffer): Trigger {
 		if(data.readUInt32LE() != VERSION)
 			throw new Error("Trigger version is incorrect");
 		const trigger: Trigger = new Trigger();

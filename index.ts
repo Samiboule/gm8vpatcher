@@ -9,6 +9,8 @@ import { Asset } from "./asset"
 import zlib from "zlib"
 import { Extension } from "./asset/extension"
 import { Trigger } from "./asset/trigger"
+import { Constant } from "./asset/constant"
+import { Sound } from "./asset/sound"
 
 const main = async () => {
 	const name: string = "k2";
@@ -16,6 +18,7 @@ const main = async () => {
 	const output: string = path.join(__dirname, "tests", `${name}_modded.exe`);
 	if(!await fs.exists(input))
 		throw new Error("The input file does not exist");
+	console.log("Reading file...");
 	const exe: SmartBuffer = SmartBuffer.fromBuffer(await fs.readFile(input));
 	if(exe.readString(2) != "MZ")
 		throw new Error("Invalid exe header");
@@ -63,6 +66,7 @@ const main = async () => {
 	let upxData: [number, number] = null;
 	if(upx0VirtualLength !== null && upx1Data !== null)
 		upxData = [upx0VirtualLength+upx1Data[0], upx1Data[1]];
+	console.log("Decrypting...");
 	const gameConfig: GameConfig = GameData.decrypt(exe, upxData);
 	const settingsLength: number = exe.readUInt32LE();
 	const settingsStart: number = exe.readOffset;
@@ -104,7 +108,7 @@ const main = async () => {
 			const data: Buffer = zlib.inflateSync(ch);
 			if(data.length < 4)
 				throw new Error("Malformed data");
-			if(data.slice(0, 4).compare(Buffer.from([0, 0, 0, 0])))
+			if(data.slice(0, 4).compare(Buffer.from([0, 0, 0, 0])) == 0)
 				return null;
 			const sBuffer: SmartBuffer = SmartBuffer.fromBuffer(data.slice(4));
 			const asset: Asset = deserializer(sBuffer);
@@ -113,26 +117,43 @@ const main = async () => {
 		}
 		return getAssetRefs(src).map(toAsset);
 	}
+	console.log("Reading game data...");
 	if(exe.readUInt32LE() != 700)
-		throw new Error("Malformed data");
+		throw new Error("Extensions header");
 	const extensionCount: number = exe.readUInt32LE();
 	const extensions: Array<Extension> = new Array(extensionCount);
-	for(let i: number = 0; i < extensionCount; ++i)
+	for(let i: number = 0; i < extensionCount; ++i){
 		extensions[i] = Extension.read(exe);
+		if(extensions[i].name == "Http Dll 2.3" && extensions[i].folderName == "http_dll_2_3")
+			throw new Error("This game is already an online version");
+	}
 	// fs.writeFile(path.join(__dirname, "http_dll_2"), Buffer.from(extensions[0].content));
 	if(exe.readUInt32LE() != 800)
-		throw new Error("Malformed data");
-	// TODO: fix error when reading triggers
-	// console.log("attempt to read triggers");
-	// const triggers = getAssets(exe, data => Trigger.deserialize(data, gameConfig)) as Array<Trigger>;
-	// console.log(triggers);
+		throw new Error("Triggers header");
+	const triggers: Array<Trigger> = getAssets(exe, data => Trigger.deserialize(data)) as Array<Trigger>;
+	if(exe.readUInt32LE() != 800)
+		throw new Error("Constants header");
+	const constantCount: number = exe.readUInt32LE();
+	const constants: Array<Constant> = new Array(constantCount);
+	for(let i: number = 0; i < constantCount; ++i){
+		const name: string = exe.readString(exe.readUInt32LE());
+		const expression: string = exe.readString(exe.readUInt32LE());
+		constants[i] = {
+			name: name,
+			expression: expression,
+		}
+	}
+	if(exe.readUInt32LE() != 800)
+		throw new Error("Sounds header");
+	const sounds: Array<Sound> = getAssets(exe, data => Sound.deserialize(data)) as Array<Sound>;
+	console.log(sounds.map(sound => sound.name));
 	// 
 	exe.readOffset = encryptionStartGM80;
+	console.log("Encrypting...");
 	GM80.encrypt(exe);
 	settings.save(exe);
-	console.log("Encrypting back");
 	GameData.encrypt(exe, gameConfig);
-	console.log("Writing file");
+	console.log("Writing...");
 	await fs.writeFile(output, exe.toBuffer());
 }
 
