@@ -5,9 +5,13 @@ import { PESection, WindowsIcon, Icon } from "./icon"
 import { GameConfig, GameData } from "./gamedata"
 import { GM80 } from "./gamedata/gm80"
 import { Settings } from "./settings"
+import { Asset } from "./asset"
+import zlib from "zlib"
+import { Extension } from "./asset/extension"
+import { Trigger } from "./asset/trigger"
 
 const main = async () => {
-	const name: string = "k3";
+	const name: string = "k2";
 	const input: string = path.join(__dirname, "tests", `${name}.exe`);
 	const output: string = path.join(__dirname, "tests", `${name}_modded.exe`);
 	if(!await fs.exists(input))
@@ -65,7 +69,8 @@ const main = async () => {
 	const settings: Settings = Settings.load(exe, gameConfig, settingsStart, settingsLength);
 	settings.showErrorMessage = false;
 	settings.logErrors = false;
-	settings.scaling = 0;
+	settings.dontShowButtons = false;
+	// settings.scaling = 0;
 	settings.f4FullscreenToggle = true;
 	const dllNameLength: number = exe.readUInt32LE();
 	exe.readOffset += dllNameLength;
@@ -75,9 +80,52 @@ const main = async () => {
 	const garbageDWords = exe.readUInt32LE();
 	exe.readOffset += garbageDWords*4;
 	exe.writeOffset = exe.readOffset;
-	exe.writeUInt32LE(1);
+	exe.writeUInt32LE(Number(true));
 	const proFlag: boolean = exe.readUInt32LE() != 0;
 	const gameID: number = exe.readUInt32LE();
+	const guid: [number, number, number, number] = [
+		exe.readUInt32LE(),
+		exe.readUInt32LE(),
+		exe.readUInt32LE(),
+		exe.readUInt32LE(),
+	];
+	const getAssetRefs = function(src: SmartBuffer): Array<Buffer> {
+		const count: number = src.readUInt32LE();
+		const refs: Array<Buffer> = new Array(count);
+		for(let i: number = 0; i < count; ++i){
+			const length: number = src.readUInt32LE();
+			const data: Buffer = src.readBuffer(length);
+			refs[i] = data;
+		}
+		return refs;
+	}
+	const getAssets = function(src: SmartBuffer, deserializer: (data: SmartBuffer) => Asset): Array<Asset> {
+		const toAsset = function(ch: Buffer): Asset {
+			const data: Buffer = zlib.inflateSync(ch);
+			if(data.length < 4)
+				throw new Error("Malformed data");
+			if(data.slice(0, 4).compare(Buffer.from([0, 0, 0, 0])))
+				return null;
+			const sBuffer: SmartBuffer = SmartBuffer.fromBuffer(data.slice(4));
+			const asset: Asset = deserializer(sBuffer);
+			sBuffer.destroy();
+			return asset;
+		}
+		return getAssetRefs(src).map(toAsset);
+	}
+	if(exe.readUInt32LE() != 700)
+		throw new Error("Malformed data");
+	const extensionCount: number = exe.readUInt32LE();
+	const extensions: Array<Extension> = new Array(extensionCount);
+	for(let i: number = 0; i < extensionCount; ++i)
+		extensions[i] = Extension.read(exe);
+	// fs.writeFile(path.join(__dirname, "http_dll_2"), Buffer.from(extensions[0].content));
+	if(exe.readUInt32LE() != 800)
+		throw new Error("Malformed data");
+	// TODO: fix error when reading triggers
+	// console.log("attempt to read triggers");
+	// const triggers = getAssets(exe, data => Trigger.deserialize(data, gameConfig)) as Array<Trigger>;
+	// console.log(triggers);
 	// 
 	exe.readOffset = encryptionStartGM80;
 	GM80.encrypt(exe);

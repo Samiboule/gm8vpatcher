@@ -62,6 +62,11 @@ export class GameData {
 			if(config.version == GameVersion.GameMaker81){
 				if(!GM81.check(exe))
 					GM81.checkLazy(exe);
+				exe.writeOffset = 0x10BD49;
+				exe.readOffset = exe.writeOffset;
+				const curValue: number = exe.readUInt8();
+				if(curValue == 0x74)
+					exe.writeUInt8(0xEB);
 			}
 		}else{
 			if(config.version == GameVersion.GameMaker81){
