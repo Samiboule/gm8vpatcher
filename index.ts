@@ -16,6 +16,8 @@ import { Background } from "./asset/background"
 import { Path } from "./asset/path"
 import { Script } from "./asset/script"
 import { Font } from "./asset/font"
+import { Timeline } from "./asset/timeline"
+import { GMObject } from "./asset/object"
 
 const main = async () => {
 	const name: string = "diva";
@@ -166,8 +168,14 @@ const main = async () => {
 	/*const scripts: Array<Script> = */getAssets(exe, Script.deserialize) as Array<Script>;
 	if(exe.readUInt32LE() != 800)
 		throw new Error("Fonts header");
-	const fonts: Array<Font> = getAssets(exe, Font.deserialize) as Array<Font>;
-	console.log(fonts.filter(font => font != null).map(font => font.name));
+	/*const fonts: Array<Font> = */getAssets(exe, Font.deserialize) as Array<Font>;
+	if(exe.readUInt32LE() != 800)
+		throw new Error("Timelines header");
+	/*const timelines: Array<Timeline> = */getAssets(exe, Timeline.deserialize) as Array<Timeline>;
+	if(exe.readUInt32LE() != 800)
+		throw new Error("Objects header");
+	const objects: Array<GMObject> = getAssets(exe, GMObject.deserialize) as Array<GMObject>;
+	console.log(objects);
 	// 
 	exe.readOffset = encryptionStartGM80;
 	console.log("Encrypting...");
