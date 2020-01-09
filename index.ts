@@ -11,9 +11,14 @@ import { Extension } from "./asset/extension"
 import { Trigger } from "./asset/trigger"
 import { Constant } from "./asset/constant"
 import { Sound } from "./asset/sound"
+import { Sprite } from "./asset/sprite"
+import { Background } from "./asset/background"
+import { Path } from "./asset/path"
+import { Script } from "./asset/script"
+import { Font } from "./asset/font"
 
 const main = async () => {
-	const name: string = "k2";
+	const name: string = "diva";
 	const input: string = path.join(__dirname, "tests", `${name}.exe`);
 	const output: string = path.join(__dirname, "tests", `${name}_modded.exe`);
 	if(!await fs.exists(input))
@@ -32,7 +37,7 @@ const main = async () => {
 	exe.readOffset += optionalLength+2;
 	let upx0VirtualLength: number = null;
 	let upx1Data: [number, number] = null;
-	let rsrcLocation: number = null;
+	// let rsrcLocation: number = null;
 	const sections: Array<PESection> = [];
 	for(let i: number = 0; i < sectionCount; ++i){
 		let sectionName: Buffer = exe.readBuffer(8);
@@ -45,8 +50,8 @@ const main = async () => {
 			upx0VirtualLength = virtualSize;
 		if(sectionName.compare(Buffer.from([0x55, 0x50, 0x58, 0x31, 0x00, 0x00, 0x00, 0x00])) == 0)
 			upx1Data = [virtualSize, diskAddress];
-		if(sectionName.compare(Buffer.from([0x2E, 0x72, 0x73, 0x72, 0x63, 0x00, 0x00, 0x00])) == 0)
-			rsrcLocation = diskAddress;
+		// if(sectionName.compare(Buffer.from([0x2E, 0x72, 0x73, 0x72, 0x63, 0x00, 0x00, 0x00])) == 0)
+		// 	rsrcLocation = diskAddress;
 		sections.push({
 			virtualSize: virtualSize,
 			virtualAddress: virtualAddress,
@@ -54,15 +59,15 @@ const main = async () => {
 			diskAddress: diskAddress,
 		});
 	}
-	let iconData: Array<WindowsIcon> = [];
-	let icoFileRaw: Array<number> = [];
-	if(rsrcLocation !== null){
-		const readOffsetBackup = exe.readOffset;
-		exe.readOffset = rsrcLocation;
-		[iconData, icoFileRaw] = Icon.find(exe, sections);
-		exe.readOffset = readOffsetBackup;
-		await Icon.save(iconData, path.join(__dirname, "tests", "issou"));
-	}
+	// let iconData: Array<WindowsIcon> = [];
+	// let icoFileRaw: Array<number> = [];
+	// if(rsrcLocation !== null){
+	// 	const readOffsetBackup = exe.readOffset;
+	// 	exe.readOffset = rsrcLocation;
+	// 	[iconData, icoFileRaw] = Icon.find(exe, sections);
+	// 	exe.readOffset = readOffsetBackup;
+	// 	await Icon.save(iconData, path.join(__dirname, "tests", "issou"));
+	// }
 	let upxData: [number, number] = null;
 	if(upx0VirtualLength !== null && upx1Data !== null)
 		upxData = [upx0VirtualLength+upx1Data[0], upx1Data[1]];
@@ -121,16 +126,17 @@ const main = async () => {
 	if(exe.readUInt32LE() != 700)
 		throw new Error("Extensions header");
 	const extensionCount: number = exe.readUInt32LE();
-	const extensions: Array<Extension> = new Array(extensionCount);
+	let extensions: Array<Extension> = new Array(extensionCount);
 	for(let i: number = 0; i < extensionCount; ++i){
 		extensions[i] = Extension.read(exe);
 		if(extensions[i].name == "Http Dll 2.3" && extensions[i].folderName == "http_dll_2_3")
 			throw new Error("This game is already an online version");
 	}
+	extensions = null;
 	// fs.writeFile(path.join(__dirname, "http_dll_2"), Buffer.from(extensions[0].content));
 	if(exe.readUInt32LE() != 800)
 		throw new Error("Triggers header");
-	const triggers: Array<Trigger> = getAssets(exe, data => Trigger.deserialize(data)) as Array<Trigger>;
+	/*const triggers: Array<Trigger> = */getAssets(exe, Trigger.deserialize) as Array<Trigger>;
 	if(exe.readUInt32LE() != 800)
 		throw new Error("Constants header");
 	const constantCount: number = exe.readUInt32LE();
@@ -145,8 +151,23 @@ const main = async () => {
 	}
 	if(exe.readUInt32LE() != 800)
 		throw new Error("Sounds header");
-	const sounds: Array<Sound> = getAssets(exe, data => Sound.deserialize(data)) as Array<Sound>;
-	console.log(sounds.map(sound => sound.name));
+	/*const sounds: Array<Sound> = */getAssets(exe, Sound.deserialize) as Array<Sound>;
+	if(exe.readUInt32LE() != 800)
+		throw new Error("Sprites header");
+	/*const sprites: Array<Sprite> = */getAssets(exe, Sprite.deserialize) as Array<Sprite>;
+	if(exe.readUInt32LE() != 800)
+		throw new Error("Backgrounds header");
+	/*const backgrounds: Array<Background> = */getAssets(exe, Background.deserialize) as Array<Background>;
+	if(exe.readUInt32LE() != 800)
+		throw new Error("Paths header");
+	/*const paths: Array<Path> = */getAssets(exe, Path.deserialize) as Array<Path>;
+	if(exe.readUInt32LE() != 800)
+		throw new Error("Scripts header");
+	/*const scripts: Array<Script> = */getAssets(exe, Script.deserialize) as Array<Script>;
+	if(exe.readUInt32LE() != 800)
+		throw new Error("Fonts header");
+	const fonts: Array<Font> = getAssets(exe, Font.deserialize) as Array<Font>;
+	console.log(fonts.filter(font => font != null).map(font => font.name));
 	// 
 	exe.readOffset = encryptionStartGM80;
 	console.log("Encrypting...");
