@@ -175,7 +175,10 @@ const main = async () => {
 	if(exe.readUInt32LE() != 800)
 		throw new Error("Objects header");
 	const objects: Array<GMObject> = getAssets(exe, GMObject.deserialize) as Array<GMObject>;
-	console.log(objects);
+	const showMessage = `;show_message("QUENTIN EST PASSE PAR LA");`;
+	objects.filter(obj => obj && obj.name == "player")[0].events[0][0][1].filter(codeAction => codeAction != null)[0].paramStrings[0] += showMessage;
+	// TODO: rewrite the objects
+	// console.log(objects.filter(obj => obj !== null).map(obj => obj.name));
 	// 
 	exe.readOffset = encryptionStartGM80;
 	console.log("Encrypting...");
