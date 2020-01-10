@@ -20,6 +20,7 @@ export class CodeAction {
 	public paramTypes: Array<number>;
 	public paramStrings: Array<string>;
 	public static fromCur(data: SmartBuffer): CodeAction {
+		const a: number = data.readOffset;
 		if(data.readUInt32LE() != VERSION)
 			throw new Error("CodeAction version is incorrect");
 		const codeAction: CodeAction = new CodeAction();
@@ -40,7 +41,7 @@ export class CodeAction {
 		codeAction.paramTypes = new Array(PARAM_COUNT);
 		for(let i: number = 0; i < PARAM_COUNT; ++i)
 			codeAction.paramTypes[i] = data.readUInt32LE();
-		codeAction.appliesTo = data.readUInt32LE();
+		codeAction.appliesTo = data.readInt32LE();
 		codeAction.isRelative = data.readUInt32LE() != 0;
 		if(data.readUInt32LE() != PARAM_COUNT)
 			throw new Error("CodeAction param count 2 is incorrect");
@@ -49,5 +50,31 @@ export class CodeAction {
 			codeAction.paramStrings[i] = data.readString(data.readUInt32LE());
 		codeAction.invertCondition = data.readUInt32LE() != 0;
 		return codeAction;
+	}
+	public writeTo(data: SmartBuffer): void {
+		data.writeUInt32LE(VERSION);
+		data.writeUInt32LE(this.libID);
+		data.writeUInt32LE(this.id);
+		data.writeUInt32LE(this.actionKind);
+		data.writeUInt32LE(this.canBeRelative);
+		data.writeUInt32LE(Number(this.isCondition));
+		data.writeUInt32LE(Number(this.appliesToSomething));
+		data.writeUInt32LE(this.actionIDX);
+		data.writeUInt32LE(Buffer.from(this.fnName).length);
+		data.writeString(this.fnName);
+		data.writeUInt32LE(Buffer.from(this.fnCode).length);
+		data.writeString(this.fnCode);
+		data.writeUInt32LE(this.paramCount);
+		data.writeUInt32LE(PARAM_COUNT);
+		for(let i: number = 0, n: number = this.paramTypes.length; i < n; ++i)
+			data.writeUInt32LE(this.paramTypes[i]);
+		data.writeInt32LE(this.appliesTo);
+		data.writeUInt32LE(Number(this.isRelative));
+		data.writeUInt32LE(PARAM_COUNT);
+		for(let i: number = 0, n: number = this.paramStrings.length; i < n; ++i){
+			data.writeUInt32LE(Buffer.from(this.paramStrings[i]).length);
+			data.writeString(this.paramStrings[i]);
+		}
+		data.writeUInt32LE(Number(this.invertCondition));
 	}
 }

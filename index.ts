@@ -124,6 +124,26 @@ const main = async () => {
 		}
 		return getAssetRefs(src).map(toAsset);
 	}
+	const putAssets = function(exe: SmartBuffer, assets: Array<Asset>): Buffer {
+		const data: SmartBuffer = new SmartBuffer();
+		data.writeUInt32LE(assets.length);
+		for(let i: number = 0, n: number = assets.length; i < n; ++i){
+			const tmpData: SmartBuffer = new SmartBuffer();
+			tmpData.writeOffset = 0;
+			tmpData.readOffset = 0;
+			if(assets[i] !== null){
+				tmpData.writeBuffer(Buffer.from([1, 0, 0, 0]));
+				assets[i].serialize(tmpData);
+			}else{
+				tmpData.writeBuffer(Buffer.from([0, 0, 0, 0]));
+			}
+			const tmpData2: Buffer = zlib.deflateSync(tmpData.toBuffer());
+			tmpData.destroy();
+			data.writeUInt32LE(tmpData2.length);
+			data.writeBuffer(tmpData2);
+		}
+		return data.toBuffer();
+	}
 	console.log("Reading game data...");
 	if(exe.readUInt32LE() != 700)
 		throw new Error("Extensions header");
@@ -174,12 +194,21 @@ const main = async () => {
 	/*const timelines: Array<Timeline> = */getAssets(exe, Timeline.deserialize) as Array<Timeline>;
 	if(exe.readUInt32LE() != 800)
 		throw new Error("Objects header");
+	const objectsOffsets: [number, number] = [exe.readOffset, 0];
 	const objects: Array<GMObject> = getAssets(exe, GMObject.deserialize) as Array<GMObject>;
-	const showMessage = `;show_message("QUENTIN EST PASSE PAR LA");`;
-	objects.filter(obj => obj && obj.name == "player")[0].events[0][0][1].filter(codeAction => codeAction != null)[0].paramStrings[0] += showMessage;
-	// TODO: rewrite the objects
-	// console.log(objects.filter(obj => obj !== null).map(obj => obj.name));
-	// 
+	objectsOffsets[1] = exe.readOffset;
+	const showMessage: string = `;show_message("Just a test");`;
+	objects.filter(obj => obj && obj.name == "player")[0].events[0][0][1][0].paramStrings[0] += showMessage;
+	const replaceChunk = function(exe: SmartBuffer, offsets: [number, number], newData: Buffer): void {
+		const part1: Buffer = exe.toBuffer().subarray(0, offsets[0]);
+		const part2: Buffer = exe.toBuffer().subarray(offsets[1], exe.length);
+		exe.clear();
+		exe.writeOffset = 0;
+		exe.writeBuffer(Buffer.from([...part1, ...newData, ...part2]));
+		exe.readOffset = part1.length+newData.length;
+		exe.writeOffset = exe.readOffset;
+	}
+	replaceChunk(exe, objectsOffsets, putAssets(exe, objects));
 	exe.readOffset = encryptionStartGM80;
 	console.log("Encrypting...");
 	GM80.encrypt(exe);

@@ -42,7 +42,7 @@ export class GMObject extends Asset {
 				const actionCount: number = data.readUInt32LE();
 				const actions: Array<CodeAction> = new Array(actionCount);
 				for(let j: number = 0; j < actionCount; ++j)
-					actions.push(CodeAction.fromCur(data));
+					actions[j] = CodeAction.fromCur(data);
 				subEventList.push([index, actions]);
 			}
 			object.events[i] = subEventList;
@@ -50,6 +50,29 @@ export class GMObject extends Asset {
 		return object;
 	}
 	public serialize(data: SmartBuffer): void {
-		// 
+		data.writeUInt32LE(Buffer.from(this.name).length);
+		data.writeString(this.name);
+		data.writeUInt32LE(VERSION);
+		data.writeUInt32LE(this.spriteIndex);
+		data.writeUInt32LE(Number(this.solid));
+		data.writeUInt32LE(Number(this.visible));
+		data.writeUInt32LE(this.depth);
+		data.writeUInt32LE(Number(this.persistent));
+		data.writeUInt32LE(this.parentIndex);
+		data.writeUInt32LE(this.maskIndex);
+		data.writeUInt32LE(this.events.length-1);
+		for(let i: number = 0, n: number = this.events.length; i < n; ++i){
+			const subList: Array<[number, Array<CodeAction>]> = this.events[i];
+			for(let j: number = 0, m: number = subList.length; j < m; ++j){
+				const [sub, actions]: [number, Array<CodeAction>] = subList[j];
+				// console.log(actions);
+				data.writeUInt32LE(sub);
+				data.writeUInt32LE(VERSION_EVENT);
+				data.writeUInt32LE(actions.length);
+				for(let k: number = 0, o: number = actions.length; k < o; ++k)
+					actions[k].writeTo(data);
+			}
+			data.writeInt32LE(-1);
+		}
 	}
 }
