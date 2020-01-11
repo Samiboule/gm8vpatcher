@@ -1,5 +1,6 @@
 import { SmartBuffer } from "smart-buffer"
 import { Utils } from "../utils"
+import md5 from "md5"
 
 export class GM80 {
 	public static check(exe: SmartBuffer): boolean {
@@ -74,11 +75,11 @@ export class GM80 {
 		}
 		return false;
 	}
-	public static decrypt(exe: SmartBuffer): void {
+	public static decrypt(exe: SmartBuffer): string {
 		const reverseTable: Array<number> = new Array(256).fill(0);
 		const garbageSize1: number = exe.readUInt32LE()*4;
 		const garbageSize2: number = exe.readUInt32LE()*4;
-		exe.readOffset += garbageSize1;
+		const ID: string = md5(exe.readBuffer(garbageSize1));
 		const swapTable: Array<number> = [...exe.readBuffer(256)];
 		exe.readOffset += garbageSize2;
 		for(let i: number = 0; i < 256; ++i)
@@ -103,6 +104,7 @@ export class GM80 {
 			exe.internalBuffer[i] = exe.internalBuffer[b];
 			exe.internalBuffer[b] = a;
 		}
+		return ID;
 	}
 	public static encrypt(exe: SmartBuffer): void {
 		const reverseTable: Array<number> = new Array(256).fill(0);

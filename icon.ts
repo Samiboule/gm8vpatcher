@@ -2,7 +2,7 @@ import fs from "fs-extra"
 import path from "path"
 import { SmartBuffer } from "smart-buffer"
 import { Utils } from "./utils"
-import Jimp from "jimp"
+// import Jimp from "jimp"
 
 export interface PESection {
 	virtualSize: number;
@@ -28,13 +28,13 @@ export class Icon {
 			const output: string = path.join(dir, `icon_${icon.width}x${icon.height}.png`);
 			if(await fs.exists(output))
 				continue;
-			const image = new Jimp({
-				data: Buffer.from(icon.bgraData),
-				width: icon.width,
-				height: icon.height,
-			});
-			await image.flip(false, true);
-			await image.write(output);
+			// const image = new Jimp({
+			// 	data: Buffer.from(icon.bgraData),
+			// 	width: icon.width,
+			// 	height: icon.height,
+			// });
+			// await image.flip(false, true);
+			// await image.write(output);
 		}
 	}
 	private static writeArray(buff: SmartBuffer, arr: Array<number>): void {

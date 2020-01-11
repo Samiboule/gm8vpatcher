@@ -85,7 +85,8 @@ export const Converter = async function(input: string, output: string): Promise<
 	exe.readOffset += dllNameLength;
 	const dxDll: Array<number> = [...exe.readBuffer(exe.readUInt32LE())];
 	const encryptionStartGM80: number = exe.readOffset;
-	GM80.decrypt(exe);
+	const ID: string = GM80.decrypt(exe);
+	console.log(ID);
 	const garbageDWords = exe.readUInt32LE();
 	exe.readOffset += garbageDWords*4;
 	exe.writeOffset = exe.readOffset;
