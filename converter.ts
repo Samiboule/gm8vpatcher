@@ -80,6 +80,7 @@ export const Converter = async function(input: string, output: string): Promise<
 	settings.logErrors = false;
 	settings.dontShowButtons = false;
 	settings.f4FullscreenToggle = true;
+	settings.allowResize = true;
 	const dllNameLength: number = exe.readUInt32LE();
 	exe.readOffset += dllNameLength;
 	const dxDll: Array<number> = [...exe.readBuffer(exe.readUInt32LE())];

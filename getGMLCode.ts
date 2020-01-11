@@ -452,27 +452,29 @@ export class GMLCode {
 	}
 	public static getSaveGame = function(world: GMObject, player: GMObject, player2: GMObject): string {
 		return `
-		buffer_clear(${world.name}.__ONLINE_buffer);
-		__ONLINE_p = ${player.name};
-		${
-			player2 !== undefined ?
-			`
-			if(!instance_exists(__ONLINE_p)){
-				__ONLINE_p = ${player2.name};
+		if(room != rSelectStage){
+			buffer_clear(${world.name}.__ONLINE_buffer);
+			__ONLINE_p = ${player.name};
+			${
+				player2 !== undefined ?
+				`
+				if(!instance_exists(__ONLINE_p)){
+					__ONLINE_p = ${player2.name};
+				}
+				` : ""
 			}
-			` : ""
-		}
-		if(instance_exists(__ONLINE_p)){
-			buffer_write_uint8(${world.name}.__ONLINE_buffer, 5);
-			if(__ONLINE_p == ${player.name}){
-				buffer_write_uint8(${world.name}.__ONLINE_buffer, 0);
-			}else{
-				buffer_write_uint8(${world.name}.__ONLINE_buffer, 1);
+			if(instance_exists(__ONLINE_p)){
+				buffer_write_uint8(${world.name}.__ONLINE_buffer, 5);
+				if(__ONLINE_p == ${player.name}){
+					buffer_write_uint8(${world.name}.__ONLINE_buffer, 0);
+				}else{
+					buffer_write_uint8(${world.name}.__ONLINE_buffer, 1);
+				}
+				buffer_write_int32(${world.name}.__ONLINE_buffer, __ONLINE_p.x);
+				buffer_write_float64(${world.name}.__ONLINE_buffer, __ONLINE_p.y);
+				buffer_write_int16(${world.name}.__ONLINE_buffer, room);
+				socket_write_message(${world.name}.__ONLINE_socket, ${world.name}.__ONLINE_buffer);
 			}
-			buffer_write_int32(${world.name}.__ONLINE_buffer, __ONLINE_p.x);
-			buffer_write_float64(${world.name}.__ONLINE_buffer, __ONLINE_p.y);
-			buffer_write_int16(${world.name}.__ONLINE_buffer, room);
-			socket_write_message(${world.name}.__ONLINE_socket, ${world.name}.__ONLINE_buffer);
 		}
 		`;
 	}
