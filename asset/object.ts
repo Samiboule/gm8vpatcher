@@ -20,13 +20,13 @@ export class GMObject extends Asset {
 		object.name = data.readString(data.readUInt32LE());
 		if(data.readUInt32LE() != VERSION)
 			throw new Error("Object version is incorrect");
-		object.spriteIndex = data.readUInt32LE();
+		object.spriteIndex = data.readInt32LE();
 		object.solid = data.readUInt32LE() != 0;
 		object.visible = data.readUInt32LE() != 0;
-		object.depth = data.readUInt32LE();
+		object.depth = data.readInt32LE();
 		object.persistent = data.readUInt32LE() != 0;
-		object.parentIndex = data.readUInt32LE();
-		object.maskIndex = data.readUInt32LE();
+		object.parentIndex = data.readInt32LE();
+		object.maskIndex = data.readInt32LE();
 		const eventListCount: number = data.readUInt32LE();
 		if(eventListCount != 11)
 			throw new Error("Malformed data");
@@ -53,13 +53,13 @@ export class GMObject extends Asset {
 		data.writeUInt32LE(Buffer.from(this.name).length);
 		data.writeString(this.name);
 		data.writeUInt32LE(VERSION);
-		data.writeUInt32LE(this.spriteIndex);
+		data.writeInt32LE(this.spriteIndex);
 		data.writeUInt32LE(Number(this.solid));
 		data.writeUInt32LE(Number(this.visible));
-		data.writeUInt32LE(this.depth);
+		data.writeInt32LE(this.depth);
 		data.writeUInt32LE(Number(this.persistent));
-		data.writeUInt32LE(this.parentIndex);
-		data.writeUInt32LE(this.maskIndex);
+		data.writeInt32LE(this.parentIndex);
+		data.writeInt32LE(this.maskIndex);
 		data.writeUInt32LE(this.events.length-1);
 		for(let i: number = 0, n: number = this.events.length; i < n; ++i){
 			const subList: Array<[number, Array<CodeAction>]> = this.events[i];
@@ -75,8 +75,14 @@ export class GMObject extends Asset {
 		}
 	}
 	private addCode(GML: string, category: number, value: number): void {
+		if(GML.slice(0, 1) == "\n")
+			GML = GML.slice(1, GML.length);
+		if(GML.slice(0, 2) == "\n\t")
+			GML = GML.slice(2, GML.length);
+		if(GML.slice(0, 3) == "\n\t\t")
+			GML = GML.slice(3, GML.length);
 		if(this.events[category].filter(element => element[0] == value).length == 0)
-			this.events[category].push([value, [CodeAction.pieceOfCode(GML)]])
+			this.events[category].push([value, [CodeAction.pieceOfCode(GML)]]);
 		else
 			this.events[category].filter(element => element[0] == value)[0][1].push(CodeAction.pieceOfCode(GML));
 	}

@@ -5,41 +5,33 @@ const VERSION: number = 800;
 
 export class Font extends Asset {
 	public name: string;
-	public sysName: string;
-	public size: number;
-	public bold: boolean;
-	public italic: boolean;
-	public rangeStart: number;
-	public rangeEnd: number;
-	public charset: number;
-	public aaLevel: number;
-	public dMap: Array<number>;
-	public mapWidth: number;
-	public mapHeight: number;
-	public pixelMap: Array<number>;
+	public content: Array<number>;
 	public static deserialize(data: SmartBuffer): Font {
+		const from: number = data.readOffset;
 		const font: Font = new Font();
 		font.name = data.readString(data.readUInt32LE());
 		if(data.readUInt32LE() != VERSION)
 			throw new Error("Font version is incorrect");
-		font.sysName = data.readString(data.readUInt32LE());
-		font.size = data.readUInt32LE();
-		font.bold = data.readUInt32LE() != 0;
-		font.italic = data.readUInt32LE() != 0;
-		font.rangeStart = data.readUInt32LE();
-		font.rangeEnd = data.readUInt32LE();
-		font.charset = 0;
-		font.aaLevel = 0;
-		font.dMap = new Array(0x600).fill(0);
+		const sysName = data.readString(data.readUInt32LE());
+		const size = data.readUInt32LE();
+		const bold = data.readUInt32LE() != 0;
+		const italic = data.readUInt32LE() != 0;
+		const rangeStart = data.readUInt32LE();
+		const rangeEnd = data.readUInt32LE();
+		const charset = 0;
+		const aaLevel = 0;
+		const dMap = new Array(0x600).fill(0);
 		for(let i: number = 0; i < 0x600; ++i)
-			font.dMap[i] = data.readUInt32LE();
-		font.mapWidth = data.readUInt32LE();
-		font.mapHeight = data.readUInt32LE();
+			dMap[i] = data.readUInt32LE();
+		const mapWidth = data.readUInt32LE();
+		const mapHeight = data.readUInt32LE();
 		const length: number = data.readUInt32LE();
-		font.pixelMap = [...data.readBuffer(length)];
+		const pixelMap = [...data.readBuffer(length)];
+		const to: number = data.readOffset;
+		font.content = [...data.toBuffer().subarray(from, to)];
 		return font;
 	}
 	public serialize(data: SmartBuffer): void {
-		// 
+		data.writeBuffer(Buffer.from(this.content));
 	}
 }
