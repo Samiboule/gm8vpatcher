@@ -1,7 +1,8 @@
+import path from "path"
 import { GMObject } from "./asset/object"
 
 export class GMLCode {
-	public static getWorldCreate(): string {
+	public static getWorldCreate(ID: string, gamePath: string): string {
 		return `
 		/// ONLINE
 		__ONLINE_connected = false;
@@ -37,6 +38,8 @@ export class GMLCode {
 			buffer_clear(__ONLINE_buffer);
 			buffer_write_uint8(__ONLINE_buffer, 3);
 			buffer_write_string(__ONLINE_buffer, __ONLINE_name);
+			buffer_write_string(__ONLINE_buffer, "${ID}");
+			buffer_write_string(__ONLINE_buffer, "${path.basename(gamePath, "exe")}");
 			socket_write_message(__ONLINE_socket, __ONLINE_buffer);
 		}
 		__ONLINE_pExists = false;

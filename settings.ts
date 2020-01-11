@@ -1,5 +1,5 @@
-import { SmartBuffer } from "smart-buffer"
 import zlib from "zlib"
+import { SmartBuffer } from "smart-buffer"
 import { GameConfig, GameVersion } from "./gamedata"
 
 export class Settings {

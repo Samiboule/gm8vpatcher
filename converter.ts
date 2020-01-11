@@ -1,12 +1,12 @@
 import fs from "fs-extra"
 import path from "path"
+import zlib from "zlib"
 import { SmartBuffer } from "smart-buffer"
 import { PESection, WindowsIcon, Icon } from "./icon"
 import { GameConfig, GameData } from "./gamedata"
 import { GM80 } from "./gamedata/gm80"
 import { Settings } from "./settings"
 import { Asset } from "./asset"
-import zlib from "zlib"
 import { Extension } from "./asset/extension"
 import { Trigger } from "./asset/trigger"
 import { Constant } from "./asset/constant"
@@ -76,17 +76,18 @@ export const Converter = async function(input: string, output: string): Promise<
 	const settingsLength: number = exe.readUInt32LE();
 	const settingsStart: number = exe.readOffset;
 	const settings: Settings = Settings.load(exe, gameConfig, settingsStart, settingsLength);
-	settings.showErrorMessage = false;
+	settings.showErrorMessage = true;
+	settings.alwaysAbort = false;
 	settings.logErrors = false;
 	settings.dontShowButtons = false;
 	settings.f4FullscreenToggle = true;
 	settings.allowResize = true;
+	settings.scaling = -1;
 	const dllNameLength: number = exe.readUInt32LE();
 	exe.readOffset += dllNameLength;
 	const dxDll: Array<number> = [...exe.readBuffer(exe.readUInt32LE())];
 	const encryptionStartGM80: number = exe.readOffset;
 	const ID: string = GM80.decrypt(exe);
-	console.log(ID);
 	const garbageDWords = exe.readUInt32LE();
 	exe.readOffset += garbageDWords*4;
 	exe.writeOffset = exe.readOffset;
@@ -271,7 +272,7 @@ export const Converter = async function(input: string, output: string): Promise<
 		throw new Error("No object world");
 	if(player == undefined)
 		throw new Error("No object player");
-	world.addCreateCode(GMLCode.getWorldCreate());
+	world.addCreateCode(GMLCode.getWorldCreate(ID, input));
 	world.addEndStepCode(GMLCode.getWorldEndStep(player, player2));
 	world.addGameEndCode(GMLCode.getWorldGameEnd());
 	const newObject = function(name: string, visible: boolean, depth: number, persistent: boolean): GMObject {
