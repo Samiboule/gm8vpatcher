@@ -65,7 +65,6 @@ export class GMObject extends Asset {
 			const subList: Array<[number, Array<CodeAction>]> = this.events[i];
 			for(let j: number = 0, m: number = subList.length; j < m; ++j){
 				const [sub, actions]: [number, Array<CodeAction>] = subList[j];
-				// console.log(actions);
 				data.writeUInt32LE(sub);
 				data.writeUInt32LE(VERSION_EVENT);
 				data.writeUInt32LE(actions.length);
@@ -74,5 +73,23 @@ export class GMObject extends Asset {
 			}
 			data.writeInt32LE(-1);
 		}
+	}
+	private addCode(GML: string, category: number, value: number): void {
+		if(this.events[category].filter(element => element[0] == value).length == 0)
+			this.events[category].push([value, [CodeAction.pieceOfCode(GML)]])
+		else
+			this.events[category].filter(element => element[0] == value)[0][1].push(CodeAction.pieceOfCode(GML));
+	}
+	public addCreateCode(GML: string): void {
+		this.addCode(GML, 0, 0);
+	}
+	public addEndStepCode(GML: string): void {
+		this.addCode(GML, 3, 2);
+	}
+	public addDrawCode(GML: string): void {
+		this.addCode(GML, 8, 0);
+	}
+	public addGameEndCode(GML: string): void {
+		this.addCode(GML, 7, 3);
 	}
 }

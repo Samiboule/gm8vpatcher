@@ -19,6 +19,26 @@ export class CodeAction {
 	public paramCount: number;
 	public paramTypes: Array<number>;
 	public paramStrings: Array<string>;
+	public static pieceOfCode(GML: string): CodeAction {
+		const codeAction: CodeAction = new CodeAction();
+		codeAction.libID = 1;
+		codeAction.id = 603;
+		codeAction.actionKind = 7;
+		codeAction.canBeRelative = 0;
+		codeAction.isCondition = false;
+		codeAction.appliesToSomething = true;
+		codeAction.actionIDX = 2;
+		codeAction.fnName = "";
+		codeAction.fnCode = "";
+		codeAction.paramCount = 1;
+		codeAction.paramTypes = [1, 0, 0, 0, 0, 0, 0, 0];
+		codeAction.appliesTo = -1;
+		codeAction.isRelative = false;
+		codeAction.paramStrings = new Array(8).fill("0");
+		codeAction.paramStrings[0] = GML;
+		codeAction.invertCondition = false;
+		return codeAction;
+	}
 	public static fromCur(data: SmartBuffer): CodeAction {
 		const a: number = data.readOffset;
 		if(data.readUInt32LE() != VERSION)

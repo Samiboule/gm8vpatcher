@@ -15,6 +15,10 @@ export class Script extends Asset {
 		return script;
 	}
 	public serialize(data: SmartBuffer): void {
-		// 
+		data.writeUInt32LE(Buffer.from(this.name).length);
+		data.writeString(this.name);
+		data.writeUInt32LE(VERSION);
+		data.writeUInt32LE(Buffer.from(this.source).length);
+		data.writeString(this.source);
 	}
 }

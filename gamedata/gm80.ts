@@ -113,8 +113,11 @@ export class GM80 {
 		exe.readOffset += garbageSize2;
 		for(let i: number = 0; i < 256; ++i)
 			reverseTable[swapTable[i]] = i;
-		const length: number = exe.readUInt32LE();
+		let length: number = exe.readUInt32LE();
 		const pos: number = exe.readOffset;
+		length = exe.length-pos;
+		exe.writeOffset = pos-4;
+		exe.writeUInt32LE(length);
 		for(let i: number = pos; i < pos+length; ++i){
 			const b: number = Math.max(i-swapTable[((i-pos) & 0xFF) >>> 0], pos);
 			const a: number = exe.internalBuffer[i];

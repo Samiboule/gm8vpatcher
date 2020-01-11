@@ -152,7 +152,7 @@ export class Extension {
 		const contentsLength: number = exe.readUInt32LE()-4;
 		exe.readUInt32LE();
 		exe.readOffset += contentsLength;
-		ext.content = [...exe.internalBuffer.slice(backupOffset, exe.readOffset)];
+		ext.content = [...exe.toBuffer().subarray(backupOffset, exe.readOffset)];
 		return ext;
 	}
 }

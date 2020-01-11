@@ -34,41 +34,37 @@ interface SoundFX {
 
 export class Sound extends Asset {
 	public name: string;
-	public source: string;
-	public extension: string;
-	public data: Array<number>;
-	public kind: SoundKind;
-	public volume: number;
-	public pan: number;
-	public preload: boolean;
-	public fx: SoundFX;
+	public content: Array<number>;
 	public static deserialize(data: SmartBuffer): Sound {
+		const from: number = data.readOffset;
 		const sound: Sound = new Sound();
 		sound.name = data.readString(data.readUInt32LE());
 		if(data.readUInt32LE() != VERSION)
 			throw new Error("Sound version is incorrect");
-		sound.kind = SoundKindFrom(data.readUInt32LE());
-		sound.extension = data.readString(data.readUInt32LE());
-		sound.source = data.readString(data.readUInt32LE());
-		sound.data = null;
+		const kind = SoundKindFrom(data.readUInt32LE());
+		const extension = data.readString(data.readUInt32LE());
+		const source = data.readString(data.readUInt32LE());
+		let soundData = null;
 		if(data.readUInt32LE() != 0){
 			const length: number = data.readUInt32LE();
-			sound.data = [...data.readBuffer(length)];
+			soundData = [...data.readBuffer(length)];
 		}
 		const effects: number = data.readUInt32LE();
-		sound.fx = {
+		const fx = {
 			chorus: (effects & 0b1) >>> 0 != 0,
 			echo: (effects & 0b1) >>> 0 != 0,
 			flanger: (effects & 0b1) >>> 0 != 0,
 			gargle: (effects & 0b1) >>> 0 != 0,
 			reverb: (effects & 0b1) >>> 0 != 0,
 		}
-		sound.volume = data.readDoubleLE();
-		sound.pan = data.readDoubleLE();
-		sound.preload = data.readUInt32LE() != 0;
+		const volume = data.readDoubleLE();
+		const pan = data.readDoubleLE();
+		const preload = data.readUInt32LE() != 0;
+		const to: number = data.readOffset;
+		sound.content = [...data.toBuffer().subarray(from, to)];
 		return sound;
 	}
 	public serialize(data: SmartBuffer): void {
-		// 
+		data.writeBuffer(Buffer.from(this.content));
 	}
 }
