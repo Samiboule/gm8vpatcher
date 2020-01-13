@@ -26,7 +26,7 @@ export class GMLCode {
 			}
 		}else{
 			__ONLINE_socket = socket_create();
-			socket_connect(__ONLINE_socket, "isocodes.org", 39083);
+			socket_connect(__ONLINE_socket, "isocodes.org", 3003);
 			__ONLINE_name = wd_input_box("Name", "Enter your name:", "");
 			if(__ONLINE_name == ""){
 				__ONLINE_name = "Anonymous";
