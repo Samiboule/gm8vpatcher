@@ -78,6 +78,7 @@ export const Converter = async function(input: string, output: string): Promise<
 	const settings: Settings = Settings.load(exe, gameConfig, settingsStart, settingsLength);
 	settings.showErrorMessage = true;
 	settings.alwaysAbort = false;
+	settings.treatCloseAsEsc = true;
 	settings.logErrors = false;
 	settings.dontShowButtons = false;
 	settings.f4FullscreenToggle = true;

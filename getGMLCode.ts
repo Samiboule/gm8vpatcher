@@ -363,7 +363,7 @@ export class GMLCode {
 		}
 		__ONLINE_alpha = 1;
 		if(__ONLINE_follower != ${player.name}){
-			__ONLINE_visible = follower.visible;
+			visible = follower.visible;
 			__ONLINE_p = ${player.name};
 			${
 				player2 !== undefined ?
@@ -396,9 +396,9 @@ export class GMLCode {
 		__ONLINE_bottom = room_height;
 		if(view_enabled && view_visible[0]){
 			__ONLINE_left = view_xview[0];
-			__ONLINE_right = left+view_wview[0];
+			__ONLINE_right = __ONLINE_left+view_wview[0];
 			__ONLINE_top = view_yview[0];
-			__ONLINE_bottom = top+view_hview[0];
+			__ONLINE_bottom = __ONLINE_top+view_hview[0];
 		}
 		__ONLINE_xx = min(max(x, __ONLINE_left+__ONLINE_width/2+padding), __ONLINE_right-__ONLINE_width/2-__ONLINE_padding);
 		__ONLINE_yy = min(max(y-__ONLINE_yOffset, __ONLINE_top+__ONLINE_height/2+__ONLINE_padding), __ONLINE_bottom-__ONLINE_height/2-__ONLINE_padding);
