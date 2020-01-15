@@ -119,7 +119,7 @@ export class GMLCode {
 					__ONLINE_found = false;
 					__ONLINE_oPlayer = 0;
 					for(__ONLINE_i = 0; __ONLINE_i < instance_number(__ONLINE_onlinePlayer); __ONLINE_i += 1){
-						__ONLINE_oPlayer = instance_find(__ONLINE_onlinePlayer, i);
+						__ONLINE_oPlayer = instance_find(__ONLINE_onlinePlayer, __ONLINE_i);
 						if(__ONLINE_oPlayer.__ONLINE_ID == __ONLINE_ID){
 							__ONLINE_found = true;
 							break;
@@ -248,10 +248,10 @@ export class GMLCode {
 			}
 		}
 		__ONLINE_pExists = __ONLINE_exists;
-		__ONLINE_pX = X;
-		__ONLINE_pY = Y;
+		__ONLINE_pX = __ONLINE_X;
+		__ONLINE_pY = __ONLINE_Y;
 		__ONLINE_t += 1;
-		socket_update_write(__ONLINE_socket);	
+		socket_update_write(__ONLINE_socket);
 		`;
 	}
 	public static getWorldGameEnd = function(): string {
@@ -275,6 +275,8 @@ export class GMLCode {
 		return `
 		/// ONLINE
 		__ONLINE_alpha = 1;
+		__ONLINE_oRoom = -1;
+		__ONLINE_name = "";
 		`;
 	}
 	public static getOnlinePlayerEndStep = function(player: GMObject, player2: GMObject): string {
@@ -363,7 +365,7 @@ export class GMLCode {
 		}
 		__ONLINE_alpha = 1;
 		if(__ONLINE_follower != ${player.name}){
-			visible = follower.visible;
+			visible = __ONLINE_follower.visible;
 			__ONLINE_p = ${player.name};
 			${
 				player2 !== undefined ?
@@ -400,7 +402,7 @@ export class GMLCode {
 			__ONLINE_top = view_yview[0];
 			__ONLINE_bottom = __ONLINE_top+view_hview[0];
 		}
-		__ONLINE_xx = min(max(x, __ONLINE_left+__ONLINE_width/2+padding), __ONLINE_right-__ONLINE_width/2-__ONLINE_padding);
+		__ONLINE_xx = min(max(x, __ONLINE_left+__ONLINE_width/2+__ONLINE_padding), __ONLINE_right-__ONLINE_width/2-__ONLINE_padding);
 		__ONLINE_yy = min(max(y-__ONLINE_yOffset, __ONLINE_top+__ONLINE_height/2+__ONLINE_padding), __ONLINE_bottom-__ONLINE_height/2-__ONLINE_padding);
 		__ONLINE__alpha = draw_get_alpha();
 		__ONLINE__color = draw_get_color();
