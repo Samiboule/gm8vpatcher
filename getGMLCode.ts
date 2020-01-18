@@ -31,7 +31,7 @@ export class GMLCode {
 			if(__ONLINE_name == ""){
 				__ONLINE_name = "Anonymous";
 			}
-			__ONLINE_name = string_replace_all(__ONLINE_name, "#", "\#");
+			__ONLINE_name = string_replace_all(__ONLINE_name, "#", "\\#");
 			if(string_length(__ONLINE_name) > 20){
 				__ONLINE_name = string_copy(__ONLINE_name, 0, 20);
 			}
@@ -167,7 +167,7 @@ export class GMLCode {
 				break;
 			case 5:
 				socket_reset(__ONLINE_socket);
-				if(connected){
+				if(__ONLINE_connected){
 					wd_message_simple("Connection lost.");
 				}else{
 					wd_message_simple("Could not connect to the server.");

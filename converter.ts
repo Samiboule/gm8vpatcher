@@ -293,7 +293,7 @@ export const Converter = async function(input: string, output: string): Promise<
 	onlinePlayer.addCreateCode(GMLCode.getOnlinePlayerCreate());
 	onlinePlayer.addEndStepCode(GMLCode.getOnlinePlayerEndStep(player, player2));
 	onlinePlayer.addDrawCode(GMLCode.getOnlinePlayerDraw());
-	const chatbox: GMObject = newObject("__ONLINE_chatbox", true, -9, true);
+	const chatbox: GMObject = newObject("__ONLINE_chatbox", true, -11, true);
 	chatbox.addCreateCode(GMLCode.getChatboxCreate());
 	chatbox.addEndStepCode(GMLCode.getChatboxEndStep(player, player2));
 	chatbox.addDrawCode(GMLCode.getChatboxDraw());
