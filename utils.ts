@@ -1,3 +1,7 @@
+import { exec } from "child_process"
+import { ncp } from "ncp"
+import rimraf from "rimraf"
+
 export class Utils {
 	public static overflowingAdd = function(n1: number, n2: number, bits: number): [number, boolean] {
 		const max: number = Math.pow(2, bits);
@@ -26,5 +30,56 @@ export class Utils {
 	public static swapBytes32(input: number): number {
 		const [a, b, c, d]: [number, number, number, number] = Utils.u32ToBytes(input);
 		return Utils.bytesToU32([d, c, b, a]);
+	}
+	public static exec(cmd: string, verbose: boolean = false): Promise<string> {
+		return new Promise(function(resolve: (stdout: string) => void, reject: (stderr: string) => void): void {
+			const std = {
+				out: "",
+				err: "",
+			}
+			if(verbose)
+				console.log(`### STARTING PROCESS (${cmd}) ###`);
+			let process = exec(cmd, {
+				cwd: __dirname,
+			});
+			for(let stream in std)
+				process[`std${stream}`].on("data", function(data: string): void {
+					if(verbose){
+						if(stream == "out")
+							console.log(data);
+						else
+							console.error(data);
+					}
+					std[stream] += data;
+				});
+			process.on("exit", function(code: number): void {
+				if(verbose)
+					console.log(`### TERMINATED WITH CODE ${code} ###`);
+				if(code)
+					reject(std.err);
+				else
+					resolve(std.out);
+			});
+		});
+	}
+	public static rimraf(dir: string): Promise<string> {
+		return new Promise(function(resolve: () => void, reject: (err: NodeJS.ErrnoException) => void): void {
+			rimraf(dir, function(err): void {
+				if(err)
+					reject(err);
+				else
+					resolve();
+			});
+		});
+	}
+	public static copyDir(srcDir: string, destDir: string): Promise<void> {
+		return new Promise(function(resolve, reject): void {
+			ncp(srcDir, destDir, function(err: any): void {
+				if(err)
+					reject(err);
+				else
+					resolve();
+			});
+		});
 	}
 }

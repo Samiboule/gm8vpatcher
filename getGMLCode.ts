@@ -2,7 +2,7 @@ import path from "path"
 import { GMObject } from "./asset/object"
 
 export class GMLCode {
-	public static getWorldCreate(ID: string, gamePath: string, server: string, ports: {tcp: number, udp: number}): string {
+	public static getWorldCreate(ID: string, gameName: string, server: string, ports: {tcp: number, udp: number}): string {
 		return `
 		/// ONLINE
 		__ONLINE_connected = false;
@@ -46,7 +46,7 @@ export class GMLCode {
 		buffer_write_uint8(__ONLINE_buffer, 3);
 		buffer_write_string(__ONLINE_buffer, __ONLINE_name);
 		buffer_write_string(__ONLINE_buffer, __ONLINE_selfGameID);
-		buffer_write_string(__ONLINE_buffer, "${path.basename(gamePath, ".exe")}");
+		buffer_write_string(__ONLINE_buffer, "${gameName}");
 		socket_write_message(__ONLINE_socket, __ONLINE_buffer);
 		__ONLINE_udpsocket = udpsocket_create();
 		udpsocket_start(__ONLINE_udpsocket, false, 0);

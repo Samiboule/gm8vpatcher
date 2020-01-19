@@ -20,7 +20,7 @@ import { Timeline } from "./asset/timeline"
 import { GMObject } from "./asset/object"
 import { GMLCode } from "./getGMLCode"
 
-export const Converter = async function(input: string, output: string, server: string, ports: {tcp: number, udp: number}): Promise<void> {
+export const Converter = async function(input: string, output: string, gameName: string, server: string, ports: {tcp: number, udp: number}): Promise<void> {
 	if(!await fs.exists(input))
 		throw new Error("The input file does not exist");
 	console.log("Reading file...");
@@ -191,8 +191,8 @@ export const Converter = async function(input: string, output: string, server: s
 		extensions.push(null);
 	}
 	if(!hasWindowsDialogs)
-		await addExtension(exe, extensions, "gm_windows_dialog");
-	await addExtension(exe, extensions, "http_dll_2");
+		await addExtension(exe, extensions, "gm_windows_dialog8");
+	await addExtension(exe, extensions, "http_dll8");
 	exe.writeOffset = extensionCountPos;
 	exe.writeUInt32LE(extensions.length);
 	extensions = null;
@@ -223,8 +223,8 @@ export const Converter = async function(input: string, output: string, server: s
 		sound.content = await fs.readFile(path.join(__dirname, file));
 		sounds.push(sound);
 	}
-	await newSound(sounds, "sound_chatbox");
-	await newSound(sounds, "sound_saved");
+	await newSound(sounds, "sound_chatbox8");
+	await newSound(sounds, "sound_saved8");
 	replaceChunk(exe, soundsOffsets, putAssets(exe, sounds));
 	sounds = null;
 	if(exe.readUInt32LE() != 800)
@@ -255,7 +255,7 @@ export const Converter = async function(input: string, output: string, server: s
 		font.content = await fs.readFile(path.join(__dirname, file));
 		fonts.push(font);
 	}
-	await newFont(fonts, "font_online");
+	await newFont(fonts, "font_online8");
 	replaceChunk(exe, fontsOffsets, putAssets(exe, fonts));
 	fonts = null;
 	if(exe.readUInt32LE() != 800)
@@ -274,7 +274,7 @@ export const Converter = async function(input: string, output: string, server: s
 		throw new Error("No object world");
 	if(player == undefined)
 		throw new Error("No object player");
-	world.addCreateCode(GMLCode.getWorldCreate(ID, input, server, ports));
+	world.addCreateCode(GMLCode.getWorldCreate(ID, gameName, server, ports));
 	world.addEndStepCode(GMLCode.getWorldEndStep(player, player2));
 	world.addGameEndCode(GMLCode.getWorldGameEnd());
 	const newObject = function(name: string, visible: boolean, depth: number, persistent: boolean): GMObject {
