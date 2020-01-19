@@ -58,7 +58,6 @@ const main = async function(): Promise<void> {
 			await fs.unlink(tmpDataWin);
 		}
 		const gameID: string = md5(await fs.readFile(oldDataWin));
-		console.log(gameID);
 		const converter: string = path.join(__dirname, "lib", "converterGMS.exe");
 		console.log("Converting data.win...");
 		await Utils.exec([
