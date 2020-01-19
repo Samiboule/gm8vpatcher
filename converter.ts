@@ -20,7 +20,7 @@ import { Timeline } from "./asset/timeline"
 import { GMObject } from "./asset/object"
 import { GMLCode } from "./getGMLCode"
 
-export const Converter = async function(input: string, output: string): Promise<void> {
+export const Converter = async function(input: string, output: string, server: string, ports: {tcp: number, udp: number}): Promise<void> {
 	if(!await fs.exists(input))
 		throw new Error("The input file does not exist");
 	console.log("Reading file...");
@@ -84,6 +84,7 @@ export const Converter = async function(input: string, output: string): Promise<
 	settings.f4FullscreenToggle = true;
 	settings.allowResize = true;
 	settings.scaling = -1;
+	settings.displayCursor = true;
 	const dllNameLength: number = exe.readUInt32LE();
 	exe.readOffset += dllNameLength;
 	const dxDll: Array<number> = [...exe.readBuffer(exe.readUInt32LE())];
@@ -273,7 +274,7 @@ export const Converter = async function(input: string, output: string): Promise<
 		throw new Error("No object world");
 	if(player == undefined)
 		throw new Error("No object player");
-	world.addCreateCode(GMLCode.getWorldCreate(ID, input));
+	world.addCreateCode(GMLCode.getWorldCreate(ID, input, server, ports));
 	world.addEndStepCode(GMLCode.getWorldEndStep(player, player2));
 	world.addGameEndCode(GMLCode.getWorldGameEnd());
 	const newObject = function(name: string, visible: boolean, depth: number, persistent: boolean): GMObject {

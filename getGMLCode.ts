@@ -2,191 +2,178 @@ import path from "path"
 import { GMObject } from "./asset/object"
 
 export class GMLCode {
-	public static getWorldCreate(ID: string, gamePath: string): string {
+	public static getWorldCreate(ID: string, gamePath: string, server: string, ports: {tcp: number, udp: number}): string {
 		return `
 		/// ONLINE
 		__ONLINE_connected = false;
 		__ONLINE_buffer = buffer_create();
+		__ONLINE_selfID = "";
+		__ONLINE_name = "";
+		__ONLINE_selfGameID = "${ID}";
+		__ONLINE_server = "${server}";
 		if(file_exists("tempOnline")){
-			buffer_read_from_file(__ONLINE_buffer, "tempOnline");
-			__ONLINE_socket = buffer_read_uint16(__ONLINE_buffer);
-			__ONLINE_n = buffer_read_uint16(__ONLINE_buffer);
-			for(__ONLINE_i = 0; __ONLINE_i < n; __ONLINE_i += 1){
-				__ONLINE_oPlayer = instance_create(0, 0, __ONLINE_onlinePlayer);
-				__ONLINE_oPlayer.__ONLINE_ID = buffer_read_string(__ONLINE_buffer);
-				__ONLINE_oPlayer.x = buffer_read_int32(__ONLINE_buffer);
-				__ONLINE_oPlayer.y = buffer_read_int32(__ONLINE_buffer);
-				__ONLINE_oPlayer.sprite_index = buffer_read_int32(__ONLINE_buffer);
-				__ONLINE_oPlayer.image_speed = buffer_read_float32(__ONLINE_buffer);
-				__ONLINE_oPlayer.image_xscale = buffer_read_float32(__ONLINE_buffer);
-				__ONLINE_oPlayer.image_yscale = buffer_read_float32(__ONLINE_buffer);
-				__ONLINE_oPlayer.image_angle = buffer_read_float32(__ONLINE_buffer);
-				__ONLINE_oPlayer.__ONLINE_oRoom = buffer_read_uint16(__ONLINE_buffer);
-				__ONLINE_oPlayer.__ONLINE_name = buffer_read_string(__ONLINE_buffer);
-			}
+		buffer_read_from_file(__ONLINE_buffer, "tempOnline");
+		__ONLINE_socket = buffer_read_uint16(__ONLINE_buffer);
+		__ONLINE_udpsocket = buffer_read_uint16(__ONLINE_buffer);
+		__ONLINE_selfID = buffer_read_string(__ONLINE_buffer);
+		__ONLINE_name = buffer_read_string(__ONLINE_buffer);
+		__ONLINE_n = buffer_read_uint16(__ONLINE_buffer);
+		for(__ONLINE_i = 0; __ONLINE_i < __ONLINE_n; __ONLINE_i += 1){
+		__ONLINE_oPlayer = instance_create(0, 0, __ONLINE_onlinePlayer);
+		__ONLINE_oPlayer.__ONLINE_ID = buffer_read_string(__ONLINE_buffer);
+		__ONLINE_oPlayer.x = buffer_read_int32(__ONLINE_buffer);
+		__ONLINE_oPlayer.y = buffer_read_int32(__ONLINE_buffer);
+		__ONLINE_oPlayer.sprite_index = buffer_read_int32(__ONLINE_buffer);
+		__ONLINE_oPlayer.image_speed = buffer_read_float32(__ONLINE_buffer);
+		__ONLINE_oPlayer.image_xscale = buffer_read_float32(__ONLINE_buffer);
+		__ONLINE_oPlayer.image_yscale = buffer_read_float32(__ONLINE_buffer);
+		__ONLINE_oPlayer.image_angle = buffer_read_float32(__ONLINE_buffer);
+		__ONLINE_oPlayer.__ONLINE_oRoom = buffer_read_uint16(__ONLINE_buffer);
+		__ONLINE_oPlayer.__ONLINE_name = buffer_read_string(__ONLINE_buffer);
+		}
 		}else{
-			__ONLINE_socket = socket_create();
-			socket_connect(__ONLINE_socket, "isocodes.org", 3003);
-			__ONLINE_name = wd_input_box("Name", "Enter your name:", "");
-			if(__ONLINE_name == ""){
-				__ONLINE_name = "Anonymous";
-			}
-			__ONLINE_name = string_replace_all(__ONLINE_name, "#", "\\#");
-			if(string_length(__ONLINE_name) > 20){
-				__ONLINE_name = string_copy(__ONLINE_name, 0, 20);
-			}
-			buffer_clear(__ONLINE_buffer);
-			buffer_write_uint8(__ONLINE_buffer, 3);
-			buffer_write_string(__ONLINE_buffer, __ONLINE_name);
-			buffer_write_string(__ONLINE_buffer, "${ID}");
-			buffer_write_string(__ONLINE_buffer, "${path.basename(gamePath, ".exe")}");
-			socket_write_message(__ONLINE_socket, __ONLINE_buffer);
+		__ONLINE_socket = socket_create();
+		socket_connect(__ONLINE_socket, __ONLINE_server, ${ports.tcp});
+		__ONLINE_name = wd_input_box("Name", "Enter your name:", "");
+		if(__ONLINE_name == ""){
+		__ONLINE_name = "Anonymous";
+		}
+		__ONLINE_name = string_replace_all(__ONLINE_name, "#", "\\#");
+		if(string_length(__ONLINE_name) > 20){
+		__ONLINE_name = string_copy(__ONLINE_name, 0, 20);
+		}
+		buffer_clear(__ONLINE_buffer);
+		buffer_write_uint8(__ONLINE_buffer, 3);
+		buffer_write_string(__ONLINE_buffer, __ONLINE_name);
+		buffer_write_string(__ONLINE_buffer, __ONLINE_selfGameID);
+		buffer_write_string(__ONLINE_buffer, "${path.basename(gamePath, ".exe")}");
+		socket_write_message(__ONLINE_socket, __ONLINE_buffer);
+		__ONLINE_udpsocket = udpsocket_create();
+		udpsocket_start(__ONLINE_udpsocket, false, 0);
+		udpsocket_set_destination(__ONLINE_udpsocket, __ONLINE_server, ${ports.udp});
+		buffer_clear(__ONLINE_buffer);
+		buffer_write_uint8(__ONLINE_buffer, 0);
+		udpsocket_send(__ONLINE_udpsocket, __ONLINE_buffer);
 		}
 		__ONLINE_pExists = false;
 		__ONLINE_pX = 0;
 		__ONLINE_pY = 0;
-		__ONLINE_updating = false;
 		__ONLINE_t = 0;
-		__ONLINE_timeUpdating = 3;
 		`;
 	}
 	public static getWorldEndStep = function(player: GMObject, player2: GMObject): string {
 		return `
 		/// ONLINE
-		if(__ONLINE_t > __ONLINE_timeUpdating){
-			__ONLINE_updating = false;
-		}
+		/// TCP SOCKETS
 		socket_update_read(__ONLINE_socket);
 		while(socket_read_message(__ONLINE_socket, __ONLINE_buffer)){
-			switch(buffer_read_uint8(__ONLINE_buffer)){
-				case 0:
-					// CREATED
-					__ONLINE_ID = buffer_read_string(__ONLINE_buffer);
-					__ONLINE_found = false;
-					for(__ONLINE_i = 0; __ONLINE_i < instance_number(__ONLINE_onlinePlayer); __ONLINE_i += 1){
-						if(instance_find(__ONLINE_onlinePlayer, __ONLINE_i).__ONLINE_ID == __ONLINE_ID){
-							__ONLINE_found = true;
-							break;
-						}
-					}
-					if(!__ONLINE_found){
-						__ONLINE_oPlayer = instance_create(0, 0, __ONLINE_onlinePlayer);
-						__ONLINE_oPlayer.__ONLINE_ID = __ONLINE_ID;
-					}
-					break;
-				case 1:
-					// DESTROYED
-					__ONLINE_ID = buffer_read_string(__ONLINE_buffer);
-					for(__ONLINE_i = 0; __ONLINE_i < instance_number(__ONLINE_onlinePlayer); __ONLINE_i += 1){
-						__ONLINE_oPlayer = instance_find(__ONLINE_onlinePlayer, __ONLINE_i);
-						if(__ONLINE_oPlayer.__ONLINE_ID == __ONLINE_ID){
-							with(__ONLINE_oPlayer){
-								instance_destroy();
-							}
-							break;
-						}
-					}
-					break;
-				case 2:
-					// MOVED
-					__ONLINE_ID = buffer_read_string(__ONLINE_buffer);
-					__ONLINE_found = false;
-					__ONLINE_oPlayer = 0;
-					for(__ONLINE_i = 0; __ONLINE_i < instance_number(__ONLINE_onlinePlayer); __ONLINE_i += 1){
-						__ONLINE_oPlayer = instance_find(__ONLINE_onlinePlayer, __ONLINE_i);
-						if(__ONLINE_oPlayer.__ONLINE_ID == __ONLINE_ID){
-							__ONLINE_found = true;
-							break;
-						}
-					}
-					if(!__ONLINE_found){
-						__ONLINE_oPlayer = instance_create(0, 0, __ONLINE_onlinePlayer);
-					}
-					__ONLINE_oPlayer.__ONLINE_ID = __ONLINE_ID;
-					__ONLINE_oPlayer.x = buffer_read_int32(__ONLINE_buffer);
-					__ONLINE_oPlayer.y = buffer_read_int32(__ONLINE_buffer);
-					__ONLINE_oPlayer.sprite_index = buffer_read_int32(__ONLINE_buffer);
-					__ONLINE_oPlayer.image_speed = buffer_read_float32(__ONLINE_buffer);
-					__ONLINE_oPlayer.image_xscale = buffer_read_float32(__ONLINE_buffer);
-					__ONLINE_oPlayer.image_yscale = buffer_read_float32(__ONLINE_buffer);
-					__ONLINE_oPlayer.image_angle = buffer_read_float32(__ONLINE_buffer);
-					__ONLINE_oPlayer.__ONLINE_oRoom = buffer_read_uint16(__ONLINE_buffer);
-					__ONLINE_oPlayer.__ONLINE_name = buffer_read_string(__ONLINE_buffer);
-					break;
-				case 4:
-					// CHAT MESSAGE
-					__ONLINE_ID = buffer_read_string(__ONLINE_buffer);
-					__ONLINE_found = false;
-					__ONLINE_oPlayer = 0;
-					for(__ONLINE_i = 0; __ONLINE_i < instance_number(__ONLINE_onlinePlayer); __ONLINE_i += 1){
-						__ONLINE_oPlayer = instance_find(__ONLINE_onlinePlayer, __ONLINE_i);
-						if(__ONLINE_oPlayer.__ONLINE_ID == __ONLINE_ID){
-							__ONLINE_found = true;
-							break;
-						}
-					}
-					if(__ONLINE_found){
-						__ONLINE_message = buffer_read_string(__ONLINE_buffer);
-						__ONLINE_oChatbox = instance_create(0, 0, __ONLINE_chatbox);
-						__ONLINE_oChatbox.__ONLINE_message = __ONLINE_message;
-						__ONLINE_oChatbox.__ONLINE_follower = __ONLINE_oPlayer;
-						if(__ONLINE_oPlayer.visible){
-							sound_play(__ONLINE_sndChatbox);
-						}
-					}
-					break;
-				case 5:
-					// SOMEONE SAVED
-					__ONLINE_sGravity = buffer_read_uint8(__ONLINE_buffer);
-					__ONLINE_sName = buffer_read_string(__ONLINE_buffer);
-					__ONLINE_sX = buffer_read_int32(__ONLINE_buffer);
-					__ONLINE_sY = buffer_read_float64(__ONLINE_buffer);
-					__ONLINE_sRoom = buffer_read_int16(__ONLINE_buffer);
-					__ONLINE_a = instance_create(0, 0, __ONLINE_playerSaved);
-					__ONLINE_a.__ONLINE_name = __ONLINE_sName;
-					buffer_clear(__ONLINE_buffer);
-					buffer_write_uint8(__ONLINE_buffer, __ONLINE_sGravity);
-					buffer_write_int32(__ONLINE_buffer, __ONLINE_sX);
-					buffer_write_float64(__ONLINE_buffer, __ONLINE_sY);
-					buffer_write_int16(__ONLINE_buffer, __ONLINE_sRoom);
-					buffer_write_to_file(__ONLINE_buffer, "tempOnline2");
-					sound_play(__ONLINE_sndSaved);
-					break;
-			}
+		switch(buffer_read_uint8(__ONLINE_buffer)){
+		case 0:
+		// CREATED
+		__ONLINE_ID = buffer_read_string(__ONLINE_buffer);
+		__ONLINE_found = false;
+		for(__ONLINE_i = 0; __ONLINE_i < instance_number(__ONLINE_onlinePlayer); __ONLINE_i += 1){
+		if(instance_find(__ONLINE_onlinePlayer, __ONLINE_i).__ONLINE_ID == __ONLINE_ID){
+		__ONLINE_found = true;
+		break;
+		}
+		}
+		if(!__ONLINE_found){
+		__ONLINE_oPlayer = instance_create(0, 0, __ONLINE_onlinePlayer);
+		__ONLINE_oPlayer.__ONLINE_ID = __ONLINE_ID;
+		__ONLINE_oPlayer.__ONLINE_name = buffer_read_string(__ONLINE_buffer);;
+		}
+		break;
+		case 1:
+		// DESTROYED
+		__ONLINE_ID = buffer_read_string(__ONLINE_buffer);
+		for(__ONLINE_i = 0; __ONLINE_i < instance_number(__ONLINE_onlinePlayer); __ONLINE_i += 1){
+		__ONLINE_oPlayer = instance_find(__ONLINE_onlinePlayer, __ONLINE_i);
+		if(__ONLINE_oPlayer.__ONLINE_ID == __ONLINE_ID){
+		with(__ONLINE_oPlayer){
+		instance_destroy();
+		}
+		break;
+		}
+		}
+		break;
+		case 4:
+		// CHAT MESSAGE
+		__ONLINE_ID = buffer_read_string(__ONLINE_buffer);
+		__ONLINE_found = false;
+		__ONLINE_oPlayer = 0;
+		for(__ONLINE_i = 0; __ONLINE_i < instance_number(__ONLINE_onlinePlayer); __ONLINE_i += 1){
+		__ONLINE_oPlayer = instance_find(__ONLINE_onlinePlayer, __ONLINE_i);
+		if(__ONLINE_oPlayer.__ONLINE_ID == __ONLINE_ID){
+		__ONLINE_found = true;
+		break;
+		}
+		}
+		if(__ONLINE_found){
+		__ONLINE_message = buffer_read_string(__ONLINE_buffer);
+		__ONLINE_oChatbox = instance_create(0, 0, __ONLINE_chatbox);
+		__ONLINE_oChatbox.__ONLINE_message = __ONLINE_message;
+		__ONLINE_oChatbox.__ONLINE_follower = __ONLINE_oPlayer;
+		if(__ONLINE_oPlayer.visible){
+		sound_play(__ONLINE_sndChatbox);
+		}
+		}
+		break;
+		case 5:
+		// SOMEONE SAVED
+		__ONLINE_sGravity = buffer_read_uint8(__ONLINE_buffer);
+		__ONLINE_sName = buffer_read_string(__ONLINE_buffer);
+		__ONLINE_sX = buffer_read_int32(__ONLINE_buffer);
+		__ONLINE_sY = buffer_read_float64(__ONLINE_buffer);
+		__ONLINE_sRoom = buffer_read_int16(__ONLINE_buffer);
+		__ONLINE_a = instance_create(0, 0, __ONLINE_playerSaved);
+		__ONLINE_a.__ONLINE_name = __ONLINE_sName;
+		buffer_clear(__ONLINE_buffer);
+		buffer_write_uint8(__ONLINE_buffer, __ONLINE_sGravity);
+		buffer_write_int32(__ONLINE_buffer, __ONLINE_sX);
+		buffer_write_float64(__ONLINE_buffer, __ONLINE_sY);
+		buffer_write_int16(__ONLINE_buffer, __ONLINE_sRoom);
+		buffer_write_to_file(__ONLINE_buffer, "tempOnline2");
+		sound_play(__ONLINE_sndSaved);
+		break;
+		case 6:
+		// SELF ID
+		__ONLINE_selfID = buffer_read_string(__ONLINE_buffer);
+		}
 		}
 		__ONLINE_mustQuit = false;
 		switch(socket_get_state(__ONLINE_socket)){
-			case 2:
-				if(!__ONLINE_connected){
-					__ONLINE_connected = true;
-				}
-				break;
-			case 4:
-				wd_message_simple("Connection closed.");
-				__ONLINE_mustQuit = true;
-				break;
-			case 5:
-				socket_reset(__ONLINE_socket);
-				if(__ONLINE_connected){
-					wd_message_simple("Connection lost.");
-				}else{
-					wd_message_simple("Could not connect to the server.");
-				}
-				__ONLINE_mustQuit = true;
-				break;
+		case 2:
+		if(!__ONLINE_connected){
+		__ONLINE_connected = true;
+		}
+		break;
+		case 4:
+		wd_message_simple("Connection closed.");
+		__ONLINE_mustQuit = true;
+		break;
+		case 5:
+		socket_reset(__ONLINE_socket);
+		if(__ONLINE_connected){
+		wd_message_simple("Connection lost.");
+		}else{
+		wd_message_simple("Could not connect to the server.");
+		}
+		__ONLINE_mustQuit = true;
+		break;
 		}
 		if(__ONLINE_mustQuit){
-			if(file_exists("temp")){
-				file_delete("temp");
-			}
-			game_end();
+		if(file_exists("temp")){
+		file_delete("temp");
+		}
+		game_end();
 		}
 		__ONLINE_p = ${player.name};
 		${
 			player2 !== undefined ?
 			`
 			if(!instance_exists(__ONLINE_p)){
-				__ONLINE_p = ${player2.name};
+			__ONLINE_p = ${player2.name};
 			}
 			` : ""
 		}
@@ -194,64 +181,109 @@ export class GMLCode {
 		__ONLINE_X = __ONLINE_pX;
 		__ONLINE_Y = __ONLINE_pY;
 		if(__ONLINE_exists){
-			if(__ONLINE_exists != __ONLINE_pExists){
-				// SEND PLAYER CREATE
-				buffer_clear(__ONLINE_buffer);
-				buffer_write_uint8(__ONLINE_buffer, 0);
-				socket_write_message(__ONLINE_socket, __ONLINE_buffer);
-			}
-			if(!__ONLINE_updating){
-				__ONLINE_X = __ONLINE_p.x;
-				__ONLINE_Y = __ONLINE_p.y;
-				if(__ONLINE_pX != __ONLINE_X || __ONLINE_pY != __ONLINE_Y){
-					// SEND PLAYER MOVED
-					buffer_clear(__ONLINE_buffer);
-					buffer_write_uint8(__ONLINE_buffer, 2);
-					buffer_write_int32(__ONLINE_buffer, __ONLINE_X);
-					buffer_write_int32(__ONLINE_buffer, __ONLINE_Y);
-					buffer_write_int32(__ONLINE_buffer, __ONLINE_p.sprite_index);
-					buffer_write_float32(__ONLINE_buffer, __ONLINE_p.image_speed);
-					buffer_write_float32(__ONLINE_buffer, __ONLINE_p.image_xscale);
-					buffer_write_float32(__ONLINE_buffer, __ONLINE_p.image_yscale);
-					buffer_write_float32(__ONLINE_buffer, __ONLINE_p.image_angle);
-					buffer_write_uint16(__ONLINE_buffer, room);
-					socket_write_message(__ONLINE_socket, __ONLINE_buffer);
-					__ONLINE_updating = true;
-					__ONLINE_t = 0;
-				}
-			}
-			if(keyboard_check_pressed(vk_space)){
-				__ONLINE_message = wd_input_box("Chat", "Say something:", "");
-				__ONLINE_message = string_replace_all(__ONLINE_message, "#", "\#");
-				__ONLINE_message_length = string_length(__ONLINE_message);
-				if(__ONLINE_message_length > 0){
-					__ONLINE_message_max_length = 300;
-					if(__ONLINE_message_length > __ONLINE_message_max_length){
-						__ONLINE_message = string_copy(__ONLINE_message, 0, __ONLINE_message_max_length);
-					}
-					buffer_clear(__ONLINE_buffer);
-					buffer_write_uint8(__ONLINE_buffer, 4);
-					buffer_write_string(__ONLINE_buffer, __ONLINE_message);
-					socket_write_message(__ONLINE_socket, __ONLINE_buffer);
-					__ONLINE_oChatbox = instance_create(0, 0, __ONLINE_chatbox);
-					__ONLINE_oChatbox.__ONLINE_message = __ONLINE_message;
-					__ONLINE_oChatbox.__ONLINE_follower = __ONLINE_p;
-					sound_play(__ONLINE_sndChatbox);
-				}
-			}
+		if(__ONLINE_exists != __ONLINE_pExists){
+		// SEND PLAYER CREATE
+		buffer_clear(__ONLINE_buffer);
+		buffer_write_uint8(__ONLINE_buffer, 0);
+		socket_write_message(__ONLINE_socket, __ONLINE_buffer);
+		}
+		__ONLINE_X = __ONLINE_p.x;
+		__ONLINE_Y = __ONLINE_p.y;
+		if(__ONLINE_pX != __ONLINE_X || __ONLINE_pY != __ONLINE_Y || __ONLINE_t < 3){
+		if(__ONLINE_t >= 3){
+		__ONLINE_t = 0;
+		}
+		// SEND PLAYER MOVED
+		if(__ONLINE_selfID != ""){
+		buffer_clear(__ONLINE_buffer);
+		buffer_write_uint8(__ONLINE_buffer, 1);
+		buffer_write_string(__ONLINE_buffer, __ONLINE_selfID);
+		buffer_write_string(__ONLINE_buffer, __ONLINE_selfGameID);
+		buffer_write_int32(__ONLINE_buffer, __ONLINE_X);
+		buffer_write_int32(__ONLINE_buffer, __ONLINE_Y);
+		buffer_write_int32(__ONLINE_buffer, __ONLINE_p.sprite_index);
+		buffer_write_float32(__ONLINE_buffer, __ONLINE_p.image_speed);
+		buffer_write_float32(__ONLINE_buffer, __ONLINE_p.image_xscale);
+		buffer_write_float32(__ONLINE_buffer, __ONLINE_p.image_yscale);
+		buffer_write_float32(__ONLINE_buffer, __ONLINE_p.image_angle);
+		buffer_write_uint16(__ONLINE_buffer, room);
+		buffer_write_string(__ONLINE_buffer, __ONLINE_name);
+		udpsocket_send(__ONLINE_udpsocket, __ONLINE_buffer);
+		}
+		}
+		__ONLINE_t += 1;
+		if(keyboard_check_pressed(vk_space)){
+		__ONLINE_message = wd_input_box("Chat", "Say something:", "");
+		__ONLINE_message = string_replace_all(__ONLINE_message, "#", "\\#");
+		__ONLINE_message_length = string_length(__ONLINE_message);
+		if(__ONLINE_message_length > 0){
+		__ONLINE_message_max_length = 300;
+		if(__ONLINE_message_length > __ONLINE_message_max_length){
+		__ONLINE_message = string_copy(__ONLINE_message, 0, __ONLINE_message_max_length);
+		}
+		buffer_clear(__ONLINE_buffer);
+		buffer_write_uint8(__ONLINE_buffer, 4);
+		buffer_write_string(__ONLINE_buffer, __ONLINE_message);
+		socket_write_message(__ONLINE_socket, __ONLINE_buffer);
+		__ONLINE_oChatbox = instance_create(0, 0, __ONLINE_chatbox);
+		__ONLINE_oChatbox.__ONLINE_message = __ONLINE_message;
+		__ONLINE_oChatbox.__ONLINE_follower = __ONLINE_p;
+		sound_play(__ONLINE_sndChatbox);
+		}
+		}
 		}else{
-			if(__ONLINE_exists != __ONLINE_pExists){
-				// SEND PLAYER DESTROYED
-				buffer_clear(__ONLINE_buffer);
-				buffer_write_uint8(__ONLINE_buffer, 1);
-				socket_write_message(__ONLINE_socket, __ONLINE_buffer);
-			}
+		if(__ONLINE_exists != __ONLINE_pExists){
+		// SEND PLAYER DESTROYED
+		buffer_clear(__ONLINE_buffer);
+		buffer_write_uint8(__ONLINE_buffer, 1);
+		socket_write_message(__ONLINE_socket, __ONLINE_buffer);
+		}
 		}
 		__ONLINE_pExists = __ONLINE_exists;
 		__ONLINE_pX = __ONLINE_X;
 		__ONLINE_pY = __ONLINE_Y;
-		__ONLINE_t += 1;
 		socket_update_write(__ONLINE_socket);
+		/// UDP SOCKETS
+		while(udpsocket_receive(__ONLINE_udpsocket, __ONLINE_buffer)){
+		switch(buffer_read_uint8(__ONLINE_buffer)){
+		case 1:
+		// RECEIVE MOVED
+		__ONLINE_ID = buffer_read_string(__ONLINE_buffer);
+		__ONLINE_gameID = buffer_read_string(__ONLINE_buffer);
+		if(__ONLINE_ID != __ONLINE_selfID || __ONLINE_gameID != __ONLINE_selfGameID){
+		__ONLINE_found = false;
+		__ONLINE_oPlayer = 0;
+		for(__ONLINE_i = 0; __ONLINE_i < instance_number(__ONLINE_onlinePlayer); __ONLINE_i += 1){
+		__ONLINE_oPlayer = instance_find(__ONLINE_onlinePlayer, __ONLINE_i);
+		if(__ONLINE_oPlayer.__ONLINE_ID == __ONLINE_ID){
+		__ONLINE_found = true;
+		break;
+		}
+		}
+		if(!__ONLINE_found){
+		__ONLINE_oPlayer = instance_create(0, 0, __ONLINE_onlinePlayer);
+		__ONLINE_oPlayer.__ONLINE_ID = __ONLINE_ID;
+		}
+		__ONLINE_oPlayer.x = buffer_read_int32(__ONLINE_buffer);
+		__ONLINE_oPlayer.y = buffer_read_int32(__ONLINE_buffer);
+		__ONLINE_oPlayer.sprite_index = buffer_read_int32(__ONLINE_buffer);
+		__ONLINE_oPlayer.image_speed = buffer_read_float32(__ONLINE_buffer);
+		__ONLINE_oPlayer.image_xscale = buffer_read_float32(__ONLINE_buffer);
+		__ONLINE_oPlayer.image_yscale = buffer_read_float32(__ONLINE_buffer);
+		__ONLINE_oPlayer.image_angle = buffer_read_float32(__ONLINE_buffer);
+		__ONLINE_oPlayer.__ONLINE_oRoom = buffer_read_uint16(__ONLINE_buffer);
+		__ONLINE_oPlayer.__ONLINE_name = buffer_read_string(__ONLINE_buffer);
+		}
+		break;
+		default:
+		wd_message_simple("Received unexpected data from the server.");
+		}
+		}
+		if(udpsocket_get_state(__ONLINE_udpsocket) != 1){
+		wd_message_simple("Connection to the UDP socket lost.");
+		game_end();
+		exit;
+		}
 		`;
 	}
 	public static getWorldGameEnd = function(): string {
@@ -268,6 +300,7 @@ export class GMLCode {
 		buffer_destroy(__ONLINE_buffer);
 		if(!file_exists("tempOnline")){
 			socket_destroy(__ONLINE_socket);
+			udpsocket_destroy(__ONLINE_udpsocket);
 		}
 		`;
 	}
@@ -488,6 +521,9 @@ export class GMLCode {
 		with(${world.name}){
 			buffer_clear(__ONLINE_buffer);
 			buffer_write_uint16(__ONLINE_buffer, __ONLINE_socket);
+			buffer_write_uint16(__ONLINE_buffer, __ONLINE_udpsocket);
+			buffer_write_string(__ONLINE_buffer, __ONLINE_selfID);
+			buffer_write_string(__ONLINE_buffer, __ONLINE_name);
 			__ONLINE_n = instance_number(__ONLINE_onlinePlayer);
 			buffer_write_uint16(__ONLINE_buffer, __ONLINE_n);
 			for(__ONLINE_i = 0; __ONLINE_i < __ONLINE_n; __ONLINE_i += 1){
