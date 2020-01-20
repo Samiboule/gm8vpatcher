@@ -182,7 +182,7 @@ export const Converter = async function(input: string, output: string, gameName:
 	const addExtension = async function(exe: SmartBuffer, extensions: Array<Extension>, file: string): Promise<void> {
 		const pos: number = exe.readOffset;
 		const part1: Buffer = exe.toBuffer().subarray(0, pos);
-		const part2: Buffer = await fs.readFile(path.join(__dirname, file));
+		const part2: Buffer = await fs.readFile(path.join(__dirname, "lib", file));
 		const part3: Buffer = exe.toBuffer().subarray(pos, exe.length);
 		exe.clear();
 		exe.writeOffset = 0;
@@ -220,7 +220,7 @@ export const Converter = async function(input: string, output: string, gameName:
 	const newSound = async function(sounds: Array<Sound>, file: string): Promise<void> {
 		const sound: Sound = new Sound();
 		sound.name = file;
-		sound.content = await fs.readFile(path.join(__dirname, file));
+		sound.content = await fs.readFile(path.join(__dirname, "lib", file));
 		sounds.push(sound);
 	}
 	await newSound(sounds, "sound_chatbox8");
@@ -252,7 +252,7 @@ export const Converter = async function(input: string, output: string, gameName:
 	const newFont = async function(fonts: Array<Font>, file: string): Promise<void> {
 		const font: Font = new Font();
 		font.name = file;
-		font.content = await fs.readFile(path.join(__dirname, file));
+		font.content = await fs.readFile(path.join(__dirname, "lib", file));
 		fonts.push(font);
 	}
 	await newFont(fonts, "font_online8");

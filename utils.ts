@@ -1,6 +1,8 @@
 import { exec } from "child_process"
 import { ncp } from "ncp"
+import readline from "readline"
 import rimraf from "rimraf"
+import process from "process"
 
 export class Utils {
 	public static overflowingAdd = function(n1: number, n2: number, bits: number): [number, boolean] {
@@ -31,16 +33,14 @@ export class Utils {
 		const [a, b, c, d]: [number, number, number, number] = Utils.u32ToBytes(input);
 		return Utils.bytesToU32([d, c, b, a]);
 	}
-	public static exec(cmd: string, verbose: boolean = false): Promise<string> {
+	public static exec(cmd: string, cwd: string, verbose: boolean = false): Promise<string> {
 		return new Promise(function(resolve: (stdout: string) => void, reject: (stderr: string) => void): void {
 			const std = {
 				out: "",
 				err: "",
 			}
-			if(verbose)
-				console.log(`### STARTING PROCESS (${cmd}) ###`);
 			let process = exec(cmd, {
-				cwd: __dirname,
+				cwd: cwd,
 			});
 			for(let stream in std)
 				process[`std${stream}`].on("data", function(data: string): void {
@@ -53,8 +53,6 @@ export class Utils {
 					std[stream] += data;
 				});
 			process.on("exit", function(code: number): void {
-				if(verbose)
-					console.log(`### TERMINATED WITH CODE ${code} ###`);
 				if(code)
 					reject(std.err);
 				else
@@ -79,6 +77,18 @@ export class Utils {
 					reject(err);
 				else
 					resolve();
+			});
+		});
+	}
+	public static getString(message: string): Promise<string> {
+		const rl = readline.createInterface({
+			input: process.stdin,
+			output: process.stdout,
+		});
+		return new Promise((resolve, _) => {
+			rl.question(message, function(answer: string): void {
+				rl.close();
+				resolve(answer);
 			});
 		});
 	}

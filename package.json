@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "tsc": "tsc -p . -w",
-    "compile": "nexe -o iwpo.exe"
+    "build": "nexe -o iwpo.exe"
   },
   "dependencies": {
     "7zip-min": "^1.1.1",

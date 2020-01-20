@@ -20,6 +20,7 @@ const main = async function(): Promise<void> {
 	}
 	if(input == ""){
 		console.log(`Usage: ${process.argv[0]} game`);
+		await Utils.getString("Please drag and drop a game on this program in order to use it");
 		process.exit(0);
 	}
 	const gameName: string = path.basename(input, ".exe");
@@ -69,7 +70,7 @@ const main = async function(): Promise<void> {
 			server,
 			ports.tcp,
 			ports.udp,
-		].map(el => `"${el}"`).join(" "));
+		].map(el => `"${el}"`).join(" "), path.dirname(converter), false);
 		await fs.unlink(oldDataWin);
 		if(isPacked){
 			const onlineDir: string = path.join(path.dirname(input), `${gameName}_online`);
@@ -90,7 +91,9 @@ const main = async function(): Promise<void> {
 		}
 		await Utils.rimraf(path.join(__dirname, "tmp", "*"));
 	}
-	console.log("Success!");
+	await Utils.getString("Success!\nPress enter to quit\n");
 }
 
-main().catch(console.error);
+main()
+.catch(() => Utils.getString("Failed! Sorry, this game is not supported by the engine.\nPress enter to quit\n"))
+.catch(console.error);
