@@ -39,7 +39,7 @@ export class Utils {
 		return Utils.bytesToU32([d, c, b, a]);
 	}
 	public static exec(cmd: string, cwd: string, verbose: boolean = false): Promise<string> {
-		return new Promise(function(resolve: (stdout: string) => void, reject: (stderr: string) => void): void {
+		return new Promise((resolve, reject) => {
 			const std = {
 				out: "",
 				err: "",
@@ -59,7 +59,7 @@ export class Utils {
 				});
 			process.on("exit", function(code: number): void {
 				if(code)
-					reject(std.err);
+					reject(new Error(std.err));
 				else
 					resolve(std.out);
 			});
