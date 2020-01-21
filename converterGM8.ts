@@ -19,10 +19,9 @@ import { Font } from "./asset/font"
 import { Timeline } from "./asset/timeline"
 import { GMObject } from "./asset/object"
 import { GMLCode } from "./getGMLCode"
+import { Ports } from "./utils"
 
-export const Converter = async function(input: string, output: string, gameName: string, server: string, ports: {tcp: number, udp: number}): Promise<void> {
-	if(!await fs.exists(input))
-		throw new Error("The input file does not exist");
+export const ConverterGM8 = async function(input: string, gameName: string, server: string, ports: Ports): Promise<void> {
 	console.log("Reading file...");
 	const exe: SmartBuffer = SmartBuffer.fromBuffer(await fs.readFile(input));
 	if(exe.readString(2) != "MZ")
@@ -332,5 +331,5 @@ export const Converter = async function(input: string, output: string, gameName:
 	settings.save(exe);
 	GameData.encrypt(exe, gameConfig);
 	console.log("Writing...");
-	await fs.writeFile(output, exe.toBuffer());
+	await fs.writeFile(path.join(path.dirname(input), `${gameName}_online.exe`), exe.toBuffer());
 }

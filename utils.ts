@@ -4,6 +4,11 @@ import readline from "readline"
 import rimraf from "rimraf"
 import process from "process"
 
+export interface Ports {
+	tcp: number,
+	udp: number,
+}
+
 export class Utils {
 	public static overflowingAdd = function(n1: number, n2: number, bits: number): [number, boolean] {
 		const max: number = Math.pow(2, bits);
