@@ -21,7 +21,7 @@ import { GMObject } from "./asset/object"
 import { GMLCode } from "./getGMLCode"
 import { Ports } from "./utils"
 
-export const ConverterGM8 = async function(input: string, gameName: string, server: string, ports: Ports): Promise<void> {
+export const ConverterGM8 = async function(input: string, gameName: string, password: string, server: string, ports: Ports): Promise<void> {
 	console.log("Reading file...");
 	const exe: SmartBuffer = SmartBuffer.fromBuffer(await fs.readFile(input));
 	if(exe.readString(2) != "MZ")
@@ -88,7 +88,7 @@ export const ConverterGM8 = async function(input: string, gameName: string, serv
 	exe.readOffset += dllNameLength;
 	const dxDll: Array<number> = [...exe.readBuffer(exe.readUInt32LE())];
 	const encryptionStartGM80: number = exe.readOffset;
-	const ID: string = GM80.decrypt(exe);
+	const ID: string = GM80.decrypt(exe)+password;
 	const garbageDWords = exe.readUInt32LE();
 	exe.readOffset += garbageDWords*4;
 	exe.writeOffset = exe.readOffset;

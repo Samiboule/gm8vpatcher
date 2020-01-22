@@ -27,6 +27,9 @@ FAQ:
   Q: Me and my friend can't play [some game] together, the server seems to think we are playing two different games
   A: Make sure you converted the exact same executable, probably you two had different versions of the game.
 
+  Q: The tool I try to convert a GameMaker:Studio game even though it is GameMaker8
+  A: Probably you have a data.win file in the same directory, I check its presence to detect GameMaker:Studio and unfortunately that can lead to this bug. To fix this, you can simply temporarily remove the data.win file from the directory.
+
   Q: I tried to convert [some game] but the converter failed. Why?
   A: Sorry about that, I cannot convert every game. Some just won't work. I will try my best at covering the greatest majority of fangames. Feel free to contact me if there is a game you really want to play online, but be aware I have other priorities and will not do updates that often. Also, no I will not cover Kamilia 3!!
 
