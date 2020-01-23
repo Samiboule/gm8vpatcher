@@ -30,6 +30,9 @@ FAQ:
   Q: The tool I try to convert a GameMaker:Studio game even though it is GameMaker8
   A: Probably you have a data.win file in the same directory, I check its presence to detect GameMaker:Studio and unfortunately that can lead to this bug. To fix this, you can simply temporarily remove the data.win file from the directory.
 
+  Q: The tool ran successfully, but gave me a game that I can't run. When I open it nothing happens and no window is created at all
+  A: GameMaker8.1 checks the executable length to ensure the data is not corrupted. Since my mod require to change that length, I disable that check for the most common version of GameMaker8.1. Unfortunately, there are too many versions I should specifically cover. What you can do to fix this issue is to decompile the game and recompile it.
+
   Q: I tried to convert [some game] but the converter failed. Why?
   A: Sorry about that, I cannot convert every game. Some just won't work. I will try my best at covering the greatest majority of fangames. Feel free to contact me if there is a game you really want to play online, but be aware I have other priorities and will not do updates that often. Also, no I will not cover Kamilia 3!!
 
