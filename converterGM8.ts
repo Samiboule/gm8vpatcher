@@ -1,6 +1,7 @@
 import fs from "fs-extra"
 import path from "path"
 import zlib from "zlib"
+import md5 from "md5"
 import { SmartBuffer } from "smart-buffer"
 import { PESection, WindowsIcon, Icon } from "./icon"
 import { GameConfig, GameData } from "./gamedata"
@@ -24,6 +25,8 @@ import { Ports } from "./utils"
 export const ConverterGM8 = async function(input: string, gameName: string, password: string, server: string, ports: Ports): Promise<void> {
 	console.log("Reading file...");
 	const exe: SmartBuffer = SmartBuffer.fromBuffer(await fs.readFile(input));
+	console.log("Generating unique key...");
+	const uniqueKey: string = md5(exe.toBuffer())+password;
 	if(exe.readString(2) != "MZ")
 		throw new Error("Invalid exe header");
 	exe.readOffset = 0x3C;
@@ -88,7 +91,7 @@ export const ConverterGM8 = async function(input: string, gameName: string, pass
 	exe.readOffset += dllNameLength;
 	const dxDll: Array<number> = [...exe.readBuffer(exe.readUInt32LE())];
 	const encryptionStartGM80: number = exe.readOffset;
-	const ID: string = GM80.decrypt(exe)+password;
+	GM80.decrypt(exe);
 	const garbageDWords = exe.readUInt32LE();
 	exe.readOffset += garbageDWords*4;
 	exe.writeOffset = exe.readOffset;
@@ -273,7 +276,7 @@ export const ConverterGM8 = async function(input: string, gameName: string, pass
 		throw new Error("No object world");
 	if(player == undefined)
 		throw new Error("No object player");
-	world.addCreateCode(GMLCode.getWorldCreate(ID, gameName, server, ports));
+	world.addCreateCode(GMLCode.getWorldCreate(uniqueKey, gameName, server, ports));
 	world.addEndStepCode(GMLCode.getWorldEndStep(player, player2));
 	world.addGameEndCode(GMLCode.getWorldGameEnd());
 	const newObject = function(name: string, visible: boolean, depth: number, persistent: boolean): GMObject {

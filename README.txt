@@ -34,9 +34,12 @@ FAQ:
   A: GameMaker8.1 checks the executable length to ensure the data is not corrupted. Since my mod require to change that length, I disable that check for the most common version of GameMaker8.1. Unfortunately, there are too many versions I should specifically cover. What you can do to fix this issue is to decompile the game and recompile it.
 
   Q: I tried to convert [some game] but the converter failed. Why?
-  A: Sorry about that, I cannot convert every game. Some just won't work. I will try my best at covering the greatest majority of fangames. Feel free to contact me if there is a game you really want to play online, but be aware I have other priorities and will not do updates that often. Also, no I will not cover Kamilia 3!!
+  A: Sorry about that, I cannot convert every game. Some just won't work. I will try my best at covering the greatest majority of fangames. Feel free to contact me if there is a game you really want to play online, but be aware I have other priorities and will not do updates that often.
 
   Q: This sucks, the server keeps crashing or is way too slow!
   A: Well, sorry again. This is my first experience at creating online games, so I may have done some things wrong. If you have advices or recommendations about the way I should code the server, once again feel free to contact me.
+
+  Q: How do I run a private room?
+  A: For now, you need to run it from a terminal and add "password=yourpassword" without quotes, I will make it more user friendly at some point.
 
 Thank you so much for downloading, I really hope you will have a lot of fun!

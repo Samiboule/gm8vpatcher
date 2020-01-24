@@ -2,14 +2,14 @@ import path from "path"
 import { GMObject } from "./asset/object"
 
 export class GMLCode {
-	public static getWorldCreate(ID: string, gameName: string, server: string, ports: {tcp: number, udp: number}): string {
+	public static getWorldCreate(uniqueKey: string, gameName: string, server: string, ports: {tcp: number, udp: number}): string {
 		return `
 		/// ONLINE
 		__ONLINE_connected = false;
 		__ONLINE_buffer = buffer_create();
 		__ONLINE_selfID = "";
 		__ONLINE_name = "";
-		__ONLINE_selfGameID = "${ID}";
+		__ONLINE_selfGameID = "${uniqueKey}";
 		__ONLINE_server = "${server}";
 		if(file_exists("tempOnline")){
 		buffer_read_from_file(__ONLINE_buffer, "tempOnline");
@@ -289,7 +289,7 @@ export class GMLCode {
 	public static getWorldGameEnd = function(): string {
 		return `
 		/// ONLINE
-		if(!file_exists("temp")){
+		if(!file_exists("temp") && !file_exists("temp.dat")){
 			if(file_exists("tempOnline")){
 				file_delete("tempOnline");
 			}
