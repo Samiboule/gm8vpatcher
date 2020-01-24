@@ -17,6 +17,7 @@ export class GMLCode {
 		__ONLINE_udpsocket = buffer_read_uint16(__ONLINE_buffer);
 		__ONLINE_selfID = buffer_read_string(__ONLINE_buffer);
 		__ONLINE_name = buffer_read_string(__ONLINE_buffer);
+		__ONLINE_selfGameID = buffer_read_string(__ONLINE_buffer);
 		__ONLINE_n = buffer_read_uint16(__ONLINE_buffer);
 		for(__ONLINE_i = 0; __ONLINE_i < __ONLINE_n; __ONLINE_i += 1){
 		__ONLINE_oPlayer = instance_create(0, 0, __ONLINE_onlinePlayer);
@@ -42,6 +43,7 @@ export class GMLCode {
 		if(string_length(__ONLINE_name) > 20){
 		__ONLINE_name = string_copy(__ONLINE_name, 0, 20);
 		}
+		__ONLINE_selfGameID += wd_input_box("Password", "Leave it empty for no password:", "");
 		buffer_clear(__ONLINE_buffer);
 		buffer_write_uint8(__ONLINE_buffer, 3);
 		buffer_write_string(__ONLINE_buffer, __ONLINE_name);
@@ -250,7 +252,7 @@ export class GMLCode {
 		// RECEIVE MOVED
 		__ONLINE_ID = buffer_read_string(__ONLINE_buffer);
 		__ONLINE_gameID = buffer_read_string(__ONLINE_buffer);
-		if(__ONLINE_ID != __ONLINE_selfID || __ONLINE_gameID != __ONLINE_selfGameID){
+		if(__ONLINE_ID != __ONLINE_selfID && __ONLINE_gameID == __ONLINE_selfGameID){
 		__ONLINE_found = false;
 		__ONLINE_oPlayer = 0;
 		for(__ONLINE_i = 0; __ONLINE_i < instance_number(__ONLINE_onlinePlayer); __ONLINE_i += 1){
@@ -524,6 +526,7 @@ export class GMLCode {
 			buffer_write_uint16(__ONLINE_buffer, __ONLINE_udpsocket);
 			buffer_write_string(__ONLINE_buffer, __ONLINE_selfID);
 			buffer_write_string(__ONLINE_buffer, __ONLINE_name);
+			buffer_write_string(__ONLINE_buffer, __ONLINE_selfGameID);
 			__ONLINE_n = instance_number(__ONLINE_onlinePlayer);
 			buffer_write_uint16(__ONLINE_buffer, __ONLINE_n);
 			for(__ONLINE_i = 0; __ONLINE_i < __ONLINE_n; __ONLINE_i += 1){

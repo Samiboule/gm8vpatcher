@@ -24,20 +24,8 @@ const getInputGame = async function(): Promise<string> {
 	return input;
 }
 
-const getPassword = async function(): Promise<string> {
-	let password: string = "";
-	for(const arg of process.argv){
-		if(arg.slice(0, 9) == "password="){
-			password = arg.slice(9);
-			break;
-		}
-	}
-	return password;
-}
-
 const main = async function(): Promise<string> {
 	const input: string = await getInputGame();
-	const password: string = await getPassword();
 	const gameName: string = path.basename(input, ".exe");
 	const server: string = "isocodes.org";
 	const ports: Ports = {
@@ -46,10 +34,10 @@ const main = async function(): Promise<string> {
 	}
 	if(await IsGMS(input)){
 		console.log("GameMaker Studio detected!");
-		await ConverterGMS(input, gameName, password, server, ports);
+		await ConverterGMS(input, gameName, server, ports);
 	}else{
 		console.log("Assuming it is Game Maker 8");
-		await ConverterGM8(input, gameName, password, server, ports);
+		await ConverterGM8(input, gameName, server, ports);
 	}
 	return "Success!";
 }
