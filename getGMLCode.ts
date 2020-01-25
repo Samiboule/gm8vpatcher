@@ -43,7 +43,11 @@ export class GMLCode {
 		if(string_length(__ONLINE_name) > 20){
 		__ONLINE_name = string_copy(__ONLINE_name, 0, 20);
 		}
-		__ONLINE_selfGameID += wd_input_box("Password", "Leave it empty for no password:", "");
+		__ONLINE_password = wd_input_box("Password", "Leave it empty for no password:", "");
+		if(string_length(__ONLINE_password) > 20){
+		__ONLINE_password = string_copy(__ONLINE_password, 0, 20);
+		}
+		__ONLINE_selfGameID += __ONLINE_password;
 		buffer_clear(__ONLINE_buffer);
 		buffer_write_uint8(__ONLINE_buffer, 3);
 		buffer_write_string(__ONLINE_buffer, __ONLINE_name);
@@ -201,6 +205,7 @@ export class GMLCode {
 		buffer_write_uint8(__ONLINE_buffer, 1);
 		buffer_write_string(__ONLINE_buffer, __ONLINE_selfID);
 		buffer_write_string(__ONLINE_buffer, __ONLINE_selfGameID);
+		buffer_write_uint16(__ONLINE_buffer, room);
 		buffer_write_int32(__ONLINE_buffer, __ONLINE_X);
 		buffer_write_int32(__ONLINE_buffer, __ONLINE_Y);
 		buffer_write_int32(__ONLINE_buffer, __ONLINE_p.sprite_index);
@@ -208,7 +213,6 @@ export class GMLCode {
 		buffer_write_float32(__ONLINE_buffer, __ONLINE_p.image_xscale);
 		buffer_write_float32(__ONLINE_buffer, __ONLINE_p.image_yscale);
 		buffer_write_float32(__ONLINE_buffer, __ONLINE_p.image_angle);
-		buffer_write_uint16(__ONLINE_buffer, room);
 		buffer_write_string(__ONLINE_buffer, __ONLINE_name);
 		udpsocket_send(__ONLINE_udpsocket, __ONLINE_buffer);
 		}
@@ -252,7 +256,6 @@ export class GMLCode {
 		// RECEIVE MOVED
 		__ONLINE_ID = buffer_read_string(__ONLINE_buffer);
 		__ONLINE_gameID = buffer_read_string(__ONLINE_buffer);
-		if(__ONLINE_ID != __ONLINE_selfID && __ONLINE_gameID == __ONLINE_selfGameID){
 		__ONLINE_found = false;
 		__ONLINE_oPlayer = 0;
 		for(__ONLINE_i = 0; __ONLINE_i < instance_number(__ONLINE_onlinePlayer); __ONLINE_i += 1){
@@ -266,6 +269,7 @@ export class GMLCode {
 		__ONLINE_oPlayer = instance_create(0, 0, __ONLINE_onlinePlayer);
 		__ONLINE_oPlayer.__ONLINE_ID = __ONLINE_ID;
 		}
+		__ONLINE_oPlayer.__ONLINE_oRoom = buffer_read_uint16(__ONLINE_buffer);
 		__ONLINE_oPlayer.x = buffer_read_int32(__ONLINE_buffer);
 		__ONLINE_oPlayer.y = buffer_read_int32(__ONLINE_buffer);
 		__ONLINE_oPlayer.sprite_index = buffer_read_int32(__ONLINE_buffer);
@@ -273,9 +277,7 @@ export class GMLCode {
 		__ONLINE_oPlayer.image_xscale = buffer_read_float32(__ONLINE_buffer);
 		__ONLINE_oPlayer.image_yscale = buffer_read_float32(__ONLINE_buffer);
 		__ONLINE_oPlayer.image_angle = buffer_read_float32(__ONLINE_buffer);
-		__ONLINE_oPlayer.__ONLINE_oRoom = buffer_read_uint16(__ONLINE_buffer);
 		__ONLINE_oPlayer.__ONLINE_name = buffer_read_string(__ONLINE_buffer);
-		}
 		break;
 		default:
 		wd_message_simple("Received unexpected data from the server.");

@@ -24,10 +24,22 @@ const getInputGame = async function(): Promise<string> {
 	return input;
 }
 
+const getServer = async function(): Promise<string> {
+	let server: string = "isocodes.org";
+	const keyword: string = "server=";
+	for(const arg of process.argv){
+		if(arg.slice(0, keyword.length) == keyword){
+			server = arg.slice(keyword.length);
+			break;
+		}
+	}
+	return server;
+}
+
 const main = async function(): Promise<string> {
 	const input: string = await getInputGame();
 	const gameName: string = path.basename(input, ".exe");
-	const server: string = "isocodes.org";
+	const server: string = await getServer();
 	const ports: Ports = {
 		tcp: 3003,
 		udp: 3005,
