@@ -1,4 +1,4 @@
-I wanna play online
+I wanna play online 1.1.0
 
 Description:
   This software is designed to automatically convert an 'I wanna be the guy' fangame into an online playable version.
@@ -39,7 +39,18 @@ FAQ:
   Q: This sucks, the server keeps crashing or is way too slow!
   A: Well, sorry again. This is my first experience at creating online games, so I may have done some things wrong. If you have advices or recommendations about the way I should code the server, once again feel free to contact me.
 
-  Q: How do I run a private room?
-  A: For now, you need to run it from a terminal and add "password=yourpassword" without quotes, I will make it more user friendly at some point.
-
 Thank you so much for downloading, I really hope you will have a lot of fun!
+
+
+
+CHANGELOG:
+
+1.1.0:
+ - Improved server security and speed
+ - Added password
+ - Fixed games that keep asking the username
+ - Fixed mixed games
+ - Fixed 32 bit compatility
+
+1.0.0:
+ - First release
