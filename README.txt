@@ -1,4 +1,4 @@
-I wanna play online 1.1.0
+I wanna play online 1.1.1
 
 Description:
   This software is designed to automatically convert an 'I wanna be the guy' fangame into an online playable version.
@@ -44,6 +44,9 @@ Thank you so much for downloading, I really hope you will have a lot of fun!
 
 
 CHANGELOG:
+
+1.1.1:
+ - Don't try to use unexisting assets anymore
 
 1.1.0:
  - Improved server security and speed
