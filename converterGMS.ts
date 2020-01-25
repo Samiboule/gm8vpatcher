@@ -41,7 +41,7 @@ export const ConverterGMS = async function(input: string, gameName: string, serv
 		await fs.copyFile(path.join(path.dirname(input), "data.win"), oldDataWin);
 	}
 	console.log("Generating unique key...");
-	const uniqueKey: string = md5(await fs.readFile(oldDataWin));
+	const uniqueKey: string = md5(Buffer.from([...Buffer.from(gameName), (await fs.stat(oldDataWin)).size]));
 	const converter: string = path.join(__dirname, "lib", "converterGMS.exe");
 	console.log("Converting data.win...");
 	await Utils.exec([
