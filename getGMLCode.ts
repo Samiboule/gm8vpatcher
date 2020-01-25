@@ -339,6 +339,7 @@ export class GMLCode {
 	public static getOnlinePlayerDraw = function(): string {
 		return `
 		/// ONLINE
+		if(sprite_exists(sprite_index)){
 		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale, image_yscale, image_angle, c_white, image_alpha);
 		__ONLINE__alpha = draw_get_alpha();
 		__ONLINE__color = draw_get_color();
@@ -360,6 +361,7 @@ export class GMLCode {
 		draw_text(__ONLINE_xx, __ONLINE_yy, __ONLINE_name);
 		draw_set_alpha(__ONLINE__alpha);
 		draw_set_color(__ONLINE__color);
+		}
 		`;
 	}
 	public static getChatboxCreate = function(): string {
@@ -558,23 +560,25 @@ export class GMLCode {
 			__ONLINE_sY = buffer_read_float64(${world.name}.__ONLINE_buffer);
 			__ONLINE_sRoom = buffer_read_int16(${world.name}.__ONLINE_buffer);
 			file_delete("tempOnline2");
-			global.grav = __ONLINE_sGravity;
-			__ONLINE_p = ${player.name};
-			${
-				player2 !== undefined ?
-				`
-				if(global.grav == 1){
-					instance_create(0, 0, ${player2.name});
-					with(${player.name}){
-						instance_destroy();
+				if(room_exists(__ONLINE_sRoom)){
+				global.grav = __ONLINE_sGravity;
+				__ONLINE_p = ${player.name};
+				${
+					player2 !== undefined ?
+					`
+					if(global.grav == 1){
+						instance_create(0, 0, ${player2.name});
+						with(${player.name}){
+							instance_destroy();
+						}
+						__ONLINE_p = ${player2.name};
 					}
-					__ONLINE_p = ${player2.name};
+					` : ""
 				}
-				` : ""
+				__ONLINE_p.x = __ONLINE_sX;
+				__ONLINE_p.y = __ONLINE_sY;
+				room_goto(__ONLINE_sRoom);	
 			}
-			__ONLINE_p.x = __ONLINE_sX;
-			__ONLINE_p.y = __ONLINE_sY;
-			room_goto(__ONLINE_sRoom);
 		}
 		`;
 	}
