@@ -24,26 +24,36 @@ const getInputGame = async function(): Promise<string> {
 	return input;
 }
 
-const getServer = async function(): Promise<string> {
+const getServer = async function(): Promise<{server: string, ports: Ports}> {
 	let server: string = "isocodes.org";
+	let ports: Ports = {
+		tcp: 3003,
+		udp: 3005,
+	}
 	const keyword: string = "server=";
 	for(const arg of process.argv){
 		if(arg.slice(0, keyword.length) == keyword){
-			server = arg.slice(keyword.length);
+			const splits = arg.slice(keyword.length).split(/,/g);
+			server = splits[0];
+			if (splits.length > 1) {
+				ports.tcp = Number(splits[1]);
+			}
+			if (splits.length > 2) {
+				ports.udp = Number(splits[2]);
+			}
 			break;
 		}
 	}
-	return server;
+	return {server, ports};
 }
 
 const main = async function(): Promise<string> {
 	const input: string = await getInputGame();
 	const gameName: string = path.basename(input, ".exe");
-	const server: string = await getServer();
-	const ports: Ports = {
-		tcp: 3003,
-		udp: 3005,
-	}
+	const {server, ports} = await getServer();
+
+	console.log(`Using Server ${server}, Ports`, ports);
+	
 	if(await IsGMS(input)){
 		console.log("GameMaker Studio detected!");
 		await ConverterGMS(input, gameName, server, ports);
