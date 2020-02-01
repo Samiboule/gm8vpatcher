@@ -165,6 +165,13 @@ export const ConverterGM8 = async function(input: string, gameName: string, serv
 		}
 		return result;
 	}
+	const insertGMLScript = function(source: string, code: string) {
+		// for scripts surrounded by `{}`, cannot append directly
+		if (/^\s*\{[\s\S]+\}\s*$/m.test(source)) {
+			return source.replace(/\}\s*$/, `${code}}`)
+		}
+		return source + code;
+	}
 	console.log("Reading game data...");
 	if(exe.readUInt32LE() != 700)
 		throw new Error("Extensions header");
@@ -314,15 +321,16 @@ export const ConverterGM8 = async function(input: string, gameName: string, serv
 		throw new Error("No script saveGame");
 	if(loadGame == undefined)
 		throw new Error("No script loadGame");
-	saveGame.source += GMLCode.getSaveGame(world, player, player2);
-	loadGame.source = GMLCode.getLoadGame(world)+loadGame.source;
+	
+	saveGame.source = insertGMLScript(saveGame.source, GMLCode.getSaveGame(world, player, player2));
+	loadGame.source = insertGMLScript(loadGame.source, GMLCode.getLoadGame(world));
 	if(saveExe == undefined && tempExe == undefined){
-		loadGame.source += GMLCode.getTempSaveExe(world, player, player2);
+		loadGame.source = insertGMLScript(loadGame.source, GMLCode.getTempSaveExe(world, player, player2));
 	}else{
 		if(tempExe !== undefined)
-			tempExe.source += GMLCode.getTempSaveExe(world, player, player2);
+			tempExe.source = insertGMLScript(tempExe.source, GMLCode.getTempSaveExe(world, player, player2));
 		else
-			saveExe.source += GMLCode.getTempSaveExe(world, player, player2);
+			saveExe.source = insertGMLScript(saveExe.source, GMLCode.getTempSaveExe(world, player, player2));
 	}
 	replaceChunk(exe, scriptsOffsets, putAssets(exe, scripts));
 	scripts = null;
