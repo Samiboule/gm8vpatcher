@@ -65,6 +65,7 @@ export class GMLCode {
 		__ONLINE_pX = 0;
 		__ONLINE_pY = 0;
 		__ONLINE_t = 0;
+		__ONLINE_stoppedFrames = 0;
 		`;
 	}
 	public static getWorldEndStep = function(player: GMObject, player2: GMObject): string {
@@ -195,7 +196,11 @@ export class GMLCode {
 		}
 		__ONLINE_X = __ONLINE_p.x;
 		__ONLINE_Y = __ONLINE_p.y;
-		if(__ONLINE_pX != __ONLINE_X || __ONLINE_pY != __ONLINE_Y || __ONLINE_t < 3){
+		__ONLINE_stoppedFrames += 1;
+		if(__ONLINE_pX != __ONLINE_X || __ONLINE_pY != __ONLINE_Y){
+			__ONLINE_stoppedFrames = 0;
+		}
+		if(__ONLINE_stoppedFrames < 5 || __ONLINE_t < 3){
 		if(__ONLINE_t >= 3){
 		__ONLINE_t = 0;
 		}
@@ -206,6 +211,7 @@ export class GMLCode {
 		buffer_write_string(__ONLINE_buffer, __ONLINE_selfID);
 		buffer_write_string(__ONLINE_buffer, __ONLINE_selfGameID);
 		buffer_write_uint16(__ONLINE_buffer, room);
+		buffer_write_uint64(__ONLINE_buffer, round(100000000 * date_current_datetime()));
 		buffer_write_int32(__ONLINE_buffer, __ONLINE_X);
 		buffer_write_int32(__ONLINE_buffer, __ONLINE_Y);
 		buffer_write_int32(__ONLINE_buffer, __ONLINE_p.sprite_index);
@@ -270,6 +276,9 @@ export class GMLCode {
 		__ONLINE_oPlayer.__ONLINE_ID = __ONLINE_ID;
 		}
 		__ONLINE_oPlayer.__ONLINE_oRoom = buffer_read_uint16(__ONLINE_buffer);
+		__ONLINE_syncTime = buffer_read_uint64(__ONLINE_buffer);
+		if (__ONLINE_oPlayer.__ONLINE_syncTime < __ONLINE_syncTime) {
+		__ONLINE_oPlayer.__ONLINE_syncTime = __ONLINE_syncTime;
 		__ONLINE_oPlayer.x = buffer_read_int32(__ONLINE_buffer);
 		__ONLINE_oPlayer.y = buffer_read_int32(__ONLINE_buffer);
 		__ONLINE_oPlayer.sprite_index = buffer_read_int32(__ONLINE_buffer);
@@ -278,6 +287,7 @@ export class GMLCode {
 		__ONLINE_oPlayer.image_yscale = buffer_read_float32(__ONLINE_buffer);
 		__ONLINE_oPlayer.image_angle = buffer_read_float32(__ONLINE_buffer);
 		__ONLINE_oPlayer.__ONLINE_name = buffer_read_string(__ONLINE_buffer);
+		}
 		break;
 		default:
 		wd_message_simple("Received unexpected data from the server.");
@@ -314,6 +324,7 @@ export class GMLCode {
 		__ONLINE_alpha = 1;
 		__ONLINE_oRoom = -1;
 		__ONLINE_name = "";
+		__ONLINE_syncTime = 0;
 		`;
 	}
 	public static getOnlinePlayerEndStep = function(player: GMObject, player2: GMObject): string {
