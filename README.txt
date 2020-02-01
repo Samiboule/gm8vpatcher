@@ -1,4 +1,4 @@
-I wanna play online 1.1.3
+I wanna play online 1.1.4
 
 Description:
   This software is designed to automatically convert an 'I wanna be the guy' fangame into an online playable version.
@@ -44,6 +44,10 @@ Thank you so much for downloading, I really hope you will have a lot of fun!
 
 
 CHANGE LOGS:
+
+1.1.4:
+ - Support for Nikaple engine
+ - Better player continuity
 
 1.1.3:
  - Fixed the heap out of memory crash for heavy studio games
