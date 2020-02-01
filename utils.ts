@@ -44,10 +44,11 @@ export class Utils {
 				out: "",
 				err: "",
 			}
-			let process = exec(cmd, {
+			const process = exec(cmd, {
 				cwd: cwd,
+				windowsHide: true,
 			});
-			for(let stream in std)
+			for(const stream in std)
 				process[`std${stream}`].on("data", function(data: string): void {
 					if(verbose){
 						if(stream == "out")
@@ -61,7 +62,7 @@ export class Utils {
 				if(code)
 					reject(new Error(std.err));
 				else
-					resolve(std.out);
+					resolve(""/*std.out*/);
 			});
 		});
 	}
