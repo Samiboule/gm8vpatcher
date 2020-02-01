@@ -9,7 +9,7 @@ const getInputGame = async function(): Promise<string> {
 	let input: string = "";
 	// console.log(process.argv);
 	if(process.argv.length > 2)
-		input = process.argv[3];
+		input = process.argv[2];
 	if(input == "")
 		throw new Error("Please drag and drop a game executable on this program in order to use it");
 	if(path.extname(input) != ".exe")
