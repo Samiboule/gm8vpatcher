@@ -4,9 +4,9 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start": "node index.js",
-    "tsc": "tsc -p . -w",
-    "build": "nexe -o iwpo.exe"
+    "start": "yarn tsc && node index.js",
+    "build": "yarn tsc && node build.js",
+    "tsc": "tsc -p ."
   },
   "dependencies": {
     "7zip-min": "^1.1.1",

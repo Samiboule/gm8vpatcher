@@ -1,6 +1,9 @@
 node_modules/
 tests/
 tmp/
-iwpo.exe
+build/
+rh.ini
+
+yarn-error.log
 
 **/*.js

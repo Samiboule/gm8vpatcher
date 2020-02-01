@@ -7,18 +7,13 @@ import { Utils, Ports } from "./utils"
 
 const getInputGame = async function(): Promise<string> {
 	let input: string = "";
-	for(const arg of process.argv){
-		if(path.basename(arg) == "iwpo.exe")
-			continue;
-		if(path.basename(arg) == "node.exe")
-			continue;
-		if(path.extname(arg) == ".exe"){
-			input = arg;
-			break;
-		}
-	}
+	// console.log(process.argv);
+	if(process.argv.length > 2)
+		input = process.argv[3];
 	if(input == "")
 		throw new Error("Please drag and drop a game executable on this program in order to use it");
+	if(path.extname(input) != ".exe")
+		throw new Error("The game has to be an executable");
 	if(!await fs.exists(input))
 		throw new Error(`Cannot find the file ${input}`);
 	return input;
@@ -51,9 +46,7 @@ const main = async function(): Promise<string> {
 	const input: string = await getInputGame();
 	const gameName: string = path.basename(input, ".exe");
 	const {server, ports} = await getServer();
-
 	console.log(`Using Server ${server}, Ports`, ports);
-	
 	if(await IsGMS(input)){
 		console.log("GameMaker Studio detected!");
 		await ConverterGMS(input, gameName, server, ports);
