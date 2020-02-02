@@ -324,7 +324,12 @@ export const ConverterGM8 = async function(input: string, gameName: string, serv
 	
 	saveGame.source = insertGMLScript(saveGame.source, GMLCode.getSaveGame(world, player, player2));
 	loadGame.source = insertGMLScript(loadGame.source, GMLCode.getLoadGame(world));
-	if(saveExe == undefined && tempExe == undefined){
+	// use a specific script name to detect Nikaple's Engine,
+	// in which tempExe exists, but we need to patch saveExe
+	const isNikapleEngine = scripts.some(script => script && script.name === 'audio_togglesoundmuted')
+	if (isNikapleEngine) {
+		saveExe.source = insertGMLScript(saveExe.source, GMLCode.getTempSaveExe(world, player, player2));
+	} else if(saveExe == undefined && tempExe == undefined){
 		loadGame.source = insertGMLScript(loadGame.source, GMLCode.getTempSaveExe(world, player, player2));
 	}else{
 		if(tempExe !== undefined)
