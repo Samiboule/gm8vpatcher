@@ -197,7 +197,7 @@ export class GMLCode {
 		__ONLINE_X = __ONLINE_p.x;
 		__ONLINE_Y = __ONLINE_p.y;
 		__ONLINE_stoppedFrames += 1;
-		if(__ONLINE_pX != __ONLINE_X || __ONLINE_pY != __ONLINE_Y){
+		if(__ONLINE_pX != __ONLINE_X || __ONLINE_pY != __ONLINE_Y || keyboard_check_released(vk_anykey) || keyboard_check_pressed(vk_anykey)){
 			__ONLINE_stoppedFrames = 0;
 		}
 		if(__ONLINE_stoppedFrames < 5 || __ONLINE_t < 3){
