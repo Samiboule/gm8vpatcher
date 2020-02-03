@@ -9,7 +9,12 @@ Maker:
   (my discord changes all the time, sorry)
 
 Special thanks:
-  Adam, viri, Maarten Baert and krzys-h
+  Adam
+  viri
+  Maarten Baert
+  krzys-h
+  Nikaple
+  hirtown
 
 How to use:
   In order to use this software, all you need to do is drag and drop the executable (.exe) of any game onto iwpo.exe.
@@ -44,6 +49,10 @@ Thank you so much for downloading, I really hope you will have a lot of fun!
 
 
 CHANGE LOGS:
+
+1.1.5:
+ - Accurate "online players" for the website
+ - Destroy player when the change of rooms
 
 1.1.4:
  - Support for Nikaple engine

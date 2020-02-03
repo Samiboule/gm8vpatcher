@@ -166,11 +166,10 @@ export const ConverterGM8 = async function(input: string, gameName: string, serv
 		return result;
 	}
 	const insertGMLScript = function(source: string, code: string) {
-		// for scripts surrounded by `{}`, cannot append directly
-		if (/^\s*\{[\s\S]+\}\s*$/m.test(source)) {
-			return source.replace(/\}\s*$/, `${code}}`)
-		}
-		return source + code;
+		// For scripts surrounded by `{}`, cannot append directly
+		if(/^\s*\{[\s\S]+\}\s*$/m.test(source))
+			return source.replace(/\}\s*$/, `${code}}`);
+		return source+code;
 	}
 	console.log("Reading game data...");
 	if(exe.readUInt32LE() != 700)
@@ -281,9 +280,12 @@ export const ConverterGM8 = async function(input: string, gameName: string, serv
 		throw new Error("No object world");
 	if(player == undefined)
 		throw new Error("No object player");
-	world.addCreateCode(GMLCode.getWorldCreate(uniqueKey, gameName, server, ports));
-	world.addEndStepCode(GMLCode.getWorldEndStep(player, player2));
-	world.addGameEndCode(GMLCode.getWorldGameEnd());
+	GMLCode.addVariables("GM8");
+	if(player2 != undefined)
+		GMLCode.addVariables("PLAYER2");
+	world.addCreateCode(await GMLCode.getGML("worldCreate", uniqueKey, server, ports.tcp, ports.udp, gameName));
+	world.addEndStepCode(await GMLCode.getGML("worldEndStep", player.name, player2 ? player2.name : ""));
+	world.addGameEndCode(await GMLCode.getGML("worldGameEnd"));
 	const newObject = function(name: string, visible: boolean, depth: number, persistent: boolean): GMObject {
 		const obj: GMObject = new GMObject();
 		obj.name = name;
@@ -298,16 +300,16 @@ export const ConverterGM8 = async function(input: string, gameName: string, serv
 		return obj;
 	}
 	const onlinePlayer: GMObject = newObject("__ONLINE_onlinePlayer", false, -10, true);
-	onlinePlayer.addCreateCode(GMLCode.getOnlinePlayerCreate());
-	onlinePlayer.addEndStepCode(GMLCode.getOnlinePlayerEndStep(player, player2));
-	onlinePlayer.addDrawCode(GMLCode.getOnlinePlayerDraw());
+	onlinePlayer.addCreateCode(await GMLCode.getGML("onlinePlayerCreate"));
+	onlinePlayer.addEndStepCode(await GMLCode.getGML("onlinePlayerEndStep", player.name, player2 ? player2.name : ""));
+	onlinePlayer.addDrawCode(await GMLCode.getGML("onlinePlayerDraw"));
 	const chatbox: GMObject = newObject("__ONLINE_chatbox", true, -11, true);
-	chatbox.addCreateCode(GMLCode.getChatboxCreate());
-	chatbox.addEndStepCode(GMLCode.getChatboxEndStep(player, player2));
-	chatbox.addDrawCode(GMLCode.getChatboxDraw());
+	chatbox.addCreateCode(await GMLCode.getGML("chatboxCreate"));
+	chatbox.addEndStepCode(await GMLCode.getGML("chatboxEndStep", player.name, player2 ? player2.name : ""));
+	chatbox.addDrawCode(await GMLCode.getGML("chatboxDraw"));
 	const playerSaved: GMObject = newObject("__ONLINE_playerSaved", true, -10, false);
-	playerSaved.addEndStepCode(GMLCode.getPlayerSavedEndStep());
-	playerSaved.addDrawCode(GMLCode.getPlayerSavedDraw());
+	playerSaved.addEndStepCode(await GMLCode.getGML("playerSavedEndStep"));
+	playerSaved.addDrawCode(await GMLCode.getGML("playerSavedDraw"));
 	objects.push(onlinePlayer);
 	objects.push(chatbox);
 	objects.push(playerSaved);
@@ -321,16 +323,16 @@ export const ConverterGM8 = async function(input: string, gameName: string, serv
 		throw new Error("No script saveGame");
 	if(loadGame == undefined)
 		throw new Error("No script loadGame");
-	
-	saveGame.source = insertGMLScript(saveGame.source, GMLCode.getSaveGame(world, player, player2));
-	loadGame.source = insertGMLScript(loadGame.source, GMLCode.getLoadGame(world));
+	saveGame.source = insertGMLScript(saveGame.source, await GMLCode.getGML("saveGame", world.name, player.name, player2 ? player2.name : ""));
+	loadGame.source = insertGMLScript(loadGame.source, await GMLCode.getGML("loadGame", world.name, player.name, player2 ? player2.name : ""));
+	const tempExeContent: string = await GMLCode.getGML("tempExe", world.name, player.name, player2 ? player2.name : ""); 
 	if(saveExe == undefined && tempExe == undefined){
-		loadGame.source = insertGMLScript(loadGame.source, GMLCode.getTempSaveExe(world, player, player2));
+		loadGame.source = insertGMLScript(loadGame.source, tempExeContent);
 	}else{
 		if(tempExe !== undefined)
-			tempExe.source = insertGMLScript(tempExe.source, GMLCode.getTempSaveExe(world, player, player2));
+			tempExe.source = insertGMLScript(tempExe.source, tempExeContent);
 		else
-			saveExe.source = insertGMLScript(saveExe.source, GMLCode.getTempSaveExe(world, player, player2));
+			saveExe.source = insertGMLScript(saveExe.source, tempExeContent);
 	}
 	replaceChunk(exe, scriptsOffsets, putAssets(exe, scripts));
 	scripts = null;
