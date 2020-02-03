@@ -283,6 +283,9 @@ export const ConverterGM8 = async function(input: string, gameName: string, serv
 	GMLCode.addVariables("GM8");
 	if(player2 != undefined)
 		GMLCode.addVariables("PLAYER2");
+	// Use a specific script name to detect Nikaple's Engine
+	if(scripts.some(script => script && script.name == "audio_togglesoundmuted"))
+		GMLCode.addVariables("NIKAPLE");
 	world.addCreateCode(await GMLCode.getGML("worldCreate", uniqueKey, server, ports.tcp, ports.udp, gameName));
 	world.addEndStepCode(await GMLCode.getGML("worldEndStep", player.name, player2 ? player2.name : ""));
 	world.addGameEndCode(await GMLCode.getGML("worldGameEnd"));
@@ -324,9 +327,11 @@ export const ConverterGM8 = async function(input: string, gameName: string, serv
 	if(loadGame == undefined)
 		throw new Error("No script loadGame");
 	saveGame.source = insertGMLScript(saveGame.source, await GMLCode.getGML("saveGame", world.name, player.name, player2 ? player2.name : ""));
-	loadGame.source = insertGMLScript(loadGame.source, await GMLCode.getGML("loadGame", world.name, player.name, player2 ? player2.name : ""));
-	const tempExeContent: string = await GMLCode.getGML("tempExe", world.name, player.name, player2 ? player2.name : ""); 
-	if(saveExe == undefined && tempExe == undefined){
+	loadGame.source = insertGMLScript(loadGame.source, await GMLCode.getGML("loadGame", world.name));
+	const tempExeContent: string = await GMLCode.getGML("tempExe", world.name, player.name, player2 ? player2.name : "");
+	if(GMLCode.is("NIKAPLE")){
+		saveExe.source = insertGMLScript(saveExe.source, tempExeContent);
+	}else if(saveExe == undefined && tempExe == undefined){
 		loadGame.source = insertGMLScript(loadGame.source, tempExeContent);
 	}else{
 		if(tempExe !== undefined)

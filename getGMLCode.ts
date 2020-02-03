@@ -7,6 +7,9 @@ export class GMLCode {
 	public static addVariables(...variables: Array<string>): void {
 		GMLCode.variables.splice(0, 0, ...variables);
 	}
+	public static is(variable: string): boolean {
+		return GMLCode.variables.indexOf(variable) != -1;
+	}
 	private static parseGML(lines: Array<string>, variables: Array<string>): [Array<string>, number] {
 		let linesRead: number = 0;
 		for(let i: number = 0; i < lines.length; ++i){
@@ -16,13 +19,9 @@ export class GMLCode {
 				return [lines.slice(0, i), linesRead-1];
 			}else if(line.slice(0, 4) == "#if "){
 				const beginIf: number = i;
-				let not: boolean = false;
-				if(line.slice(0, 8) == "#if not ")
-					not = true;
-				let variable = line.slice(not ? 8 : 4, line.length);
-				let keep: boolean = variables.indexOf(variable) != -1;
-				if(not)
-					keep = !keep;
+				const not: boolean = line.slice(0, 8) == "#if not ";
+				const variable: string = line.slice(not ? 8 : 4, line.length);
+				const keep: boolean = not ? !GMLCode.is(variable) : GMLCode.is(variable);
 				const [ifSection, lengthOfSection]: [Array<string>, number] = GMLCode.parseGML(lines.slice(i+1, lines.length), variables);
 				linesRead += lengthOfSection+1;
 				if(lines[i+lengthOfSection+1].trim() != "#endif")

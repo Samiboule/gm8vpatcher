@@ -53,6 +53,8 @@ CHANGE LOGS:
 1.1.5:
  - Accurate "online players" for the website
  - Destroy player when the change of rooms
+ - Fixed saves for Nikaple engine
+ - Slightly better player continuity
 
 1.1.4:
  - Support for Nikaple engine

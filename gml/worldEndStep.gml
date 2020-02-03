@@ -135,7 +135,7 @@ if(@exists){
 	@X = @p.x;
 	@Y = @p.y;
 	@stoppedFrames += 1;
-	if(@pX != @X || @pY != @Y){
+	if(@pX != @X || @pY != @Y || keyboard_check_released(vk_anykey) || keyboard_check_pressed(vk_anykey)){
 		@stoppedFrames = 0;
 	}
 	if(@stoppedFrames < 5 || @t < 3){
