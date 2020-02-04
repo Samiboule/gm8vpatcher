@@ -1,4 +1,7 @@
 /// ONLINE
+// %arg0: The name of the world object
+// %arg1: The name of the player object
+// %arg2: The name of the player2 object if it exists
 #if STUDIO
 	if(argument0){
 #endif

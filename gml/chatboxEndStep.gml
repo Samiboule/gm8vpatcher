@@ -1,4 +1,6 @@
 /// ONLINE
+// %arg0: The name of the player object
+// %arg1: The name of the player2 object if it exists
 @f = @follower;
 #if PLAYER2
 	if(@f == %arg0 && !instance_exists(@f)){

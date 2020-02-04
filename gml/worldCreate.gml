@@ -1,4 +1,10 @@
 /// ONLINE
+// %arg0: The ID of the game
+// %arg1: The server
+// %arg2: The TCP port
+// %arg3: The UDP port
+// %arg4: The game name
+// %arg5: The version
 @connected = false;
 @buffer = buffer_create();
 @selfID = "";

@@ -1,4 +1,6 @@
 /// ONLINE
+// %arg0: The name of the player object
+// %arg1: The name of the player2 object if it exists
 // TCP SOCKETS
 socket_update_read(@socket);
 while(socket_read_message(@socket, @buffer)){

@@ -1,4 +1,7 @@
 /// ONLINE
+// %arg0: The name of the world object
+// %arg1: The name of the player object
+// %arg2: The name of the player2 object if it exists
 #if TEMPFILE
 	if(file_exists("tempOnline2")){
 		buffer_clear(%arg0.@buffer);
@@ -16,11 +19,11 @@
 		@p = %arg1;
 		#if PLAYER2
 			if(%arg0.@sGravity == 1){
-				instance_create(0, 0, %arg1);
-				with(%arg0){
+				instance_create(0, 0, %arg2);
+				with(%arg1){
 					instance_destroy();
 				}
-				@p = %arg1;
+				@p = %arg2;
 			}
 		#endif
 		#if STUDIO

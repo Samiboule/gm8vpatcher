@@ -1,4 +1,5 @@
 /// ONLINE
+// %arg0: The name of the world object
 #if TEMPFILE
 	with(%arg0){
 		buffer_clear(@buffer);

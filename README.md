@@ -25,3 +25,18 @@ Then, simply run
 yarn build
 ```
 (you may need to create a new instance of your terminal after running `yarn setup-build`).
+
+## Edit the GML files
+The GML files contain the code that will be injected into the game.
+If you want to edit these files to contribute, first there are 3 things you should note:
+* For every custom variable name you use, prefix it with `@`. The converter will then add a longer prefix in order to avoid conflicts.
+* All the occurences of `%arg[n]` will be replaced by the nth argument. Those are handled by the converter.
+* You can add specific parts of code with some sorts of directives:
+    ```c
+    #if STUDIO
+        // This will be added to the game only for GameMaker:Studio
+        #if not NIKAPLE
+            // This will be added to the game only for GameMaker:Studio with a non Nikaple engine
+        #endif
+    #endif
+    ```

@@ -1,4 +1,6 @@
 /// ONLINE
+// %arg0: The name of the player object
+// %arg1: The name of the player2 object if it exists
 visible = @oRoom == room;
 image_alpha = @alpha;
 @p = %arg0;
