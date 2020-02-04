@@ -5,28 +5,30 @@
 @name = "";
 @selfGameID = "%arg0";
 @server = "%arg1";
-if(file_exists("tempOnline")){
-	buffer_read_from_file(@buffer, "tempOnline");
-	@socket = buffer_read_uint16(@buffer);
-	@udpsocket = buffer_read_uint16(@buffer);
-	@selfID = buffer_read_string(@buffer);
-	@name = buffer_read_string(@buffer);
-	@selfGameID = buffer_read_string(@buffer);
-	@n = buffer_read_uint16(@buffer);
-	for(@i = 0; @i < @n; @i += 1){
-		@oPlayer = instance_create(0, 0, @onlinePlayer);
-		@oPlayer.@ID = buffer_read_string(@buffer);
-		@oPlayer.x = buffer_read_int32(@buffer);
-		@oPlayer.y = buffer_read_int32(@buffer);
-		@oPlayer.sprite_index = buffer_read_int32(@buffer);
-		@oPlayer.image_speed = buffer_read_float32(@buffer);
-		@oPlayer.image_xscale = buffer_read_float32(@buffer);
-		@oPlayer.image_yscale = buffer_read_float32(@buffer);
-		@oPlayer.image_angle = buffer_read_float32(@buffer);
-		@oPlayer.@oRoom = buffer_read_uint16(@buffer);
-		@oPlayer.@name = buffer_read_string(@buffer);
-	}
-}else{
+#if TEMPFILE
+	if(file_exists("tempOnline")){
+		buffer_read_from_file(@buffer, "tempOnline");
+		@socket = buffer_read_uint16(@buffer);
+		@udpsocket = buffer_read_uint16(@buffer);
+		@selfID = buffer_read_string(@buffer);
+		@name = buffer_read_string(@buffer);
+		@selfGameID = buffer_read_string(@buffer);
+		@n = buffer_read_uint16(@buffer);
+		for(@i = 0; @i < @n; @i += 1){
+			@oPlayer = instance_create(0, 0, @onlinePlayer);
+			@oPlayer.@ID = buffer_read_string(@buffer);
+			@oPlayer.x = buffer_read_int32(@buffer);
+			@oPlayer.y = buffer_read_int32(@buffer);
+			@oPlayer.sprite_index = buffer_read_int32(@buffer);
+			@oPlayer.image_speed = buffer_read_float32(@buffer);
+			@oPlayer.image_xscale = buffer_read_float32(@buffer);
+			@oPlayer.image_yscale = buffer_read_float32(@buffer);
+			@oPlayer.image_angle = buffer_read_float32(@buffer);
+			@oPlayer.@oRoom = buffer_read_uint16(@buffer);
+			@oPlayer.@name = buffer_read_string(@buffer);
+		}
+	}else{
+#endif
 	@socket = socket_create();
 	socket_connect(@socket, @server, %arg2);
 	#if STUDIO
@@ -64,10 +66,17 @@ if(file_exists("tempOnline")){
 	buffer_clear(@buffer);
 	buffer_write_uint8(@buffer, 0);
 	udpsocket_send(@udpsocket, @buffer);
-}
+#if TEMPFILE
+	}
+#endif
 @pExists = false;
 @pX = 0;
 @pY = 0;
 @t = 0;
 @heartbeat = 0;
 @stoppedFrames = 0;
+@sGravity = 0;
+@sX = 0;
+@sY = 0;
+@sRoom = 0;
+@sSaved = false;

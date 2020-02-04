@@ -51,6 +51,7 @@ const build = async function(): Promise<string> {
 	await Promise.all([
 		fs.copyFile(path.join(__dirname, "README.txt"), path.join(unpackedDir, "README.txt")),
 		Utils.copyDir(path.join(__dirname, "lib"), path.join(unpackedDir, "lib")),
+		Utils.copyDir(path.join(__dirname, "gml"), path.join(unpackedDir, "gml")),
 		fs.mkdir(path.join(unpackedDir, "tmp")),
 		Utils.copyDir(path.join(__dirname, "node_modules", "7zip-bin"), path.join(unpackedDir, "node_modules", "7zip-bin")),
 	]);

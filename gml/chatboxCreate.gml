@@ -8,3 +8,4 @@
 @t = 70;
 @sep = -1;
 @maxTextWidth = @width-2*@paddingText;
+@hasDestroyed = false;

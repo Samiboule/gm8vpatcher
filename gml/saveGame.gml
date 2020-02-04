@@ -1,6 +1,11 @@
 /// ONLINE
-if(room != rSelectStage){
-	buffer_clear(%arg0.@buffer);
+#if STUDIO
+	if(argument0){
+#endif
+#if not STUDIO
+	if(room != rSelectStage){
+#endif
+	buffer_clear(objWorld.@buffer);
 	@p = %arg1;
 	#if PLAYER2
 		if(!instance_exists(@p)){
@@ -9,11 +14,16 @@ if(room != rSelectStage){
 	#endif
 	if(instance_exists(@p)){
 		buffer_write_uint8(%arg0.@buffer, 5);
-		if(@p == %arg1){
-			buffer_write_uint8(%arg0.@buffer, 0);
-		}else{
-			buffer_write_uint8(%arg0.@buffer, 1);
-		}
+		#if STUDIO
+			buffer_write_uint8(%arg0.@buffer, global.grav);
+		#endif
+		#if not STUDIO
+			if(@p == %arg1){
+				buffer_write_uint8(%arg0.@buffer, 0);
+			}else{
+				buffer_write_uint8(%arg0.@buffer, 1);
+			}
+		#endif
 		buffer_write_int32(%arg0.@buffer, @p.x);
 		buffer_write_float64(%arg0.@buffer, @p.y);
 		buffer_write_int16(%arg0.@buffer, room);

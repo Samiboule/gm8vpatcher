@@ -281,6 +281,7 @@ export const ConverterGM8 = async function(input: string, gameName: string, serv
 	if(player == undefined)
 		throw new Error("No object player");
 	GMLCode.addVariables("GM8");
+	GMLCode.addVariables("TEMPFILE");
 	if(player2 != undefined)
 		GMLCode.addVariables("PLAYER2");
 	// Use a specific script name to detect Nikaple's Engine
@@ -327,17 +328,17 @@ export const ConverterGM8 = async function(input: string, gameName: string, serv
 	if(loadGame == undefined)
 		throw new Error("No script loadGame");
 	saveGame.source = insertGMLScript(saveGame.source, await GMLCode.getGML("saveGame", world.name, player.name, player2 ? player2.name : ""));
-	loadGame.source = insertGMLScript(loadGame.source, await GMLCode.getGML("loadGame", world.name));
-	const tempExeContent: string = await GMLCode.getGML("tempExe", world.name, player.name, player2 ? player2.name : "");
+	loadGame.source = insertGMLScript(loadGame.source, await GMLCode.getGML("saveGame2", world.name));
+	const loadGameContent: string = await GMLCode.getGML("loadGame", world.name, player.name, player2 ? player2.name : "");
 	if(GMLCode.is("NIKAPLE")){
-		saveExe.source = insertGMLScript(saveExe.source, tempExeContent);
+		saveExe.source = insertGMLScript(saveExe.source, loadGameContent);
 	}else if(saveExe == undefined && tempExe == undefined){
-		loadGame.source = insertGMLScript(loadGame.source, tempExeContent);
+		loadGame.source = insertGMLScript(loadGame.source, loadGameContent);
 	}else{
 		if(tempExe !== undefined)
-			tempExe.source = insertGMLScript(tempExe.source, tempExeContent);
+			tempExe.source = insertGMLScript(tempExe.source, loadGameContent);
 		else
-			saveExe.source = insertGMLScript(saveExe.source, tempExeContent);
+			saveExe.source = insertGMLScript(saveExe.source, loadGameContent);
 	}
 	replaceChunk(exe, scriptsOffsets, putAssets(exe, scripts));
 	scripts = null;

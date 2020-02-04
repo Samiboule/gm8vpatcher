@@ -1,25 +1,47 @@
 /// ONLINE
-with(%arg0){
-	buffer_clear(@buffer);
-	buffer_write_uint16(@buffer, @socket);
-	buffer_write_uint16(@buffer, @udpsocket);
-	buffer_write_string(@buffer, @selfID);
-	buffer_write_string(@buffer, @name);
-	buffer_write_string(@buffer, @selfGameID);
-	@n = instance_number(@onlinePlayer);
-	buffer_write_uint16(@buffer, @n);
-	for(@i = 0; @i < @n; @i += 1){
-		@oPlayer = instance_find(@onlinePlayer, @i);
-		buffer_write_string(@buffer, @oPlayer.@ID);
-		buffer_write_int32(@buffer, @oPlayer.x);
-		buffer_write_int32(@buffer, @oPlayer.y);
-		buffer_write_int32(@buffer, @oPlayer.sprite_index);
-		buffer_write_float32(@buffer, @oPlayer.image_speed);
-		buffer_write_float32(@buffer, @oPlayer.image_xscale);
-		buffer_write_float32(@buffer, @oPlayer.image_yscale);
-		buffer_write_float32(@buffer, @oPlayer.image_angle);
-		buffer_write_uint16(@buffer, @oPlayer.@oRoom);
-		buffer_write_string(@buffer, @oPlayer.@name);
+#if TEMPFILE
+	if(file_exists("tempOnline2")){
+		buffer_clear(%arg0.@buffer);
+		buffer_read_from_file(%arg0.@buffer, "tempOnline2");
+		%arg0.@sGravity = buffer_read_uint8(%arg0.@buffer);
+		%arg0.@sX = buffer_read_int32(%arg0.@buffer);
+		%arg0.@sY = buffer_read_float64(%arg0.@buffer);
+		%arg0.@sRoom = buffer_read_int16(%arg0.@buffer);
+		file_delete("tempOnline2");
+#endif
+#if not TEMPFILE
+	if(%arg0.@sSaved){
+#endif
+	if(room_exists(%arg0.@sRoom)){
+		@p = %arg1;
+		#if PLAYER2
+			if(%arg0.@sGravity == 1){
+				instance_create(0, 0, %arg1);
+				with(%arg0){
+					instance_destroy();
+				}
+				@p = %arg1;
+			}
+		#endif
+		#if STUDIO
+			if(global.grav != %arg0.@sGravity){
+				#if SCR_FLIP_GRAV
+					scrFlipGrav();
+				#endif
+				#if not SCR_FLIP_GRAV
+					with(@p){
+						event_user(0);
+					}
+				#endif
+			}
+		#endif
+		#if not STUDIO
+			global.grav = @sGravity;
+		#endif
+		@p = %arg1;
+		@p.x = %arg0.@sX;
+		@p.y = %arg0.@sY;
+		room_goto(%arg0.@sRoom);
 	}
-	buffer_write_to_file(@buffer, "tempOnline");
+	%arg0.@sSaved = false;
 }

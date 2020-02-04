@@ -1,5 +1,5 @@
 /// ONLINE
-#if not STUDIO
+#if TEMPFILE
 	if(!file_exists("temp") && !file_exists("temp.dat")){
 		if(file_exists("tempOnline")){
 			file_delete("tempOnline");
@@ -10,11 +10,11 @@
 	}
 #endif
 buffer_destroy(@buffer);
-#if not STUDIO
+#if TEMPFILE
 	if(!file_exists("tempOnline")){
 #endif
 socket_destroy(@socket);
 udpsocket_destroy(@udpsocket);
-#if not STUDIO
+#if TEMPFILE
 	}
 #endif

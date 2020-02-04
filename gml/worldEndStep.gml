@@ -49,12 +49,18 @@ while(socket_read_message(@socket, @buffer)){
 				@oChatbox.@message = @message;
 				@oChatbox.@follower = @oPlayer;
 				if(@oPlayer.visible){
-					sound_play(@sndChatbox);
+					#if STUDIO
+						audio_play_sound(@sndChatbox, 0, false);
+					#endif
+					#if not STUDIO
+						sound_play(@sndChatbox);
+					#endif
 				}
 			}
 			break;
 		case 5:
 			// SOMEONE SAVED
+			@sSaved = true;
 			@sGravity = buffer_read_uint8(@buffer);
 			@sName = buffer_read_string(@buffer);
 			@sX = buffer_read_int32(@buffer);
@@ -62,13 +68,20 @@ while(socket_read_message(@socket, @buffer)){
 			@sRoom = buffer_read_int16(@buffer);
 			@a = instance_create(0, 0, @playerSaved);
 			@a.@name = @sName;
-			buffer_clear(@buffer);
-			buffer_write_uint8(@buffer, @sGravity);
-			buffer_write_int32(@buffer, @sX);
-			buffer_write_float64(@buffer, @sY);
-			buffer_write_int16(@buffer, @sRoom);
-			buffer_write_to_file(@buffer, "tempOnline2");
-			sound_play(@sndSaved);
+			#if TEMPFILE
+				buffer_clear(@buffer);
+				buffer_write_uint8(@buffer, @sGravity);
+				buffer_write_int32(@buffer, @sX);
+				buffer_write_float64(@buffer, @sY);
+				buffer_write_int16(@buffer, @sRoom);
+				buffer_write_to_file(@buffer, "tempOnline2");
+			#endif
+			#if STUDIO
+				audio_play_sound(@sndSaved, 0, false);
+			#endif
+			#if not STUDIO
+				sound_play(@sndSaved);
+			#endif
 			break;
 		case 6:
 			// SELF ID
@@ -108,7 +121,7 @@ switch(socket_get_state(@socket)){
 		break;
 }
 if(@mustQuit){
-	#if not STUDIO
+	#if TEMPFILE
 		if(file_exists("temp")){
 			file_delete("temp");
 		}
@@ -149,13 +162,28 @@ if(@exists){
 			buffer_write_string(@buffer, @selfID);
 			buffer_write_string(@buffer, @selfGameID);
 			buffer_write_uint16(@buffer, room);
-			buffer_write_uint64(@buffer, round(100000000*date_current_datetime()));
+			buffer_write_uint64(@buffer, current_time);
 			buffer_write_int32(@buffer, @X);
 			buffer_write_int32(@buffer, @Y);
 			buffer_write_int32(@buffer, @p.sprite_index);
 			buffer_write_float32(@buffer, @p.image_speed);
-			buffer_write_float32(@buffer, @p.image_xscale);
-			buffer_write_float32(@buffer, @p.image_yscale);
+			#if GLOBAL_PLAYER_XSCALE
+				buffer_write_float32(@buffer, @p.image_xscale*global.player_xscale);
+			#endif
+			#if not GLOBAL_PLAYER_XSCALE
+				#if STUDIO
+					buffer_write_float32(@buffer, @p.image_xscale*@p.xScale);
+				#endif
+				#if not STUDIO
+					buffer_write_float32(@buffer, @p.image_xscale);
+				#endif
+			#endif
+			#if STUDIO
+				buffer_write_float32(@buffer, @p.image_yscale*global.grav);
+			#endif
+			#if not STUDIO
+				buffer_write_float32(@buffer, @p.image_yscale);
+			#endif
 			buffer_write_float32(@buffer, @p.image_angle);
 			buffer_write_string(@buffer, @name);
 			udpsocket_send(@udpsocket, @buffer);
@@ -163,7 +191,12 @@ if(@exists){
 	}
 	@t += 1;
 	if(keyboard_check_pressed(vk_space)){
-		@message = wd_input_box("Chat", "Say something:", "");
+		#if STUDIO
+			@message = get_string("Say something:", "");
+		#endif
+		#if not STUDIO
+			@message = wd_input_box("Chat", "Say something:", "");
+		#endif
 		@message = string_replace_all(@message, "#", "\\#");
 		@message_length = string_length(@message);
 		if(@message_length > 0){
@@ -178,7 +211,12 @@ if(@exists){
 			@oChatbox = instance_create(0, 0, @chatbox);
 			@oChatbox.@message = @message;
 			@oChatbox.@follower = @p;
-			sound_play(@sndChatbox);
+			#if STUDIO
+				audio_play_sound(@sndChatbox, 0, false);
+			#endif
+			#if not STUDIO
+				sound_play(@sndChatbox);
+			#endif
 		}
 	}
 }else{
@@ -205,7 +243,7 @@ socket_update_write(@socket);
 while(udpsocket_receive(@udpsocket, @buffer)){
 	switch(buffer_read_uint8(@buffer)){
 		case 1:
-			// RECEIVE MOVED
+			// RECEIVED MOVED
 			@ID = buffer_read_string(@buffer);
 			@gameID = buffer_read_string(@buffer);
 			@found = false;

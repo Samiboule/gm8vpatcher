@@ -1,20 +1,22 @@
 /// ONLINE
 @f = @follower;
-if(@f == %arg0 && !instance_exists(@f)){
-	#if PLAYER2
+#if PLAYER2
+	if(@f == %arg0 && !instance_exists(@f)){
 		@f = %arg1;
-	#endif
-}
+	}
+#endif
 if(instance_exists(@f)){
 	x = @f.x;
 	y = @f.y;
 }else{
 	instance_destroy();
+	exit;
 }
 if(@fade){
 	@fadeAlpha -= 0.02;
 	if(@fadeAlpha <= 0){
 		instance_destroy();
+		exit;
 	}
 }
 @alpha = 1;
@@ -32,4 +34,21 @@ if(@follower != %arg0){
 @t -= 1;
 if(@t < 0){
 	@fade = true;
+}
+// Destroy all other chatboxes of the same player
+if(!@hasDestroyed){
+	@found = false;
+	@oChatbox = 0;
+	for(@i = 0; @i < instance_number(@chatbox) && !@found; @i += 1){
+		@oChatbox = instance_find(@chatbox, @i);
+		if(@oChatbox.@follower == @follower && @oChatbox.id != id){
+			@found = true;
+		}
+	}
+	if(@found){
+		with(@oChatbox){
+			instance_destroy();
+		}
+	}
+	@hasDestroyed = true;
 }
