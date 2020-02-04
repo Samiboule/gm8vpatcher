@@ -55,8 +55,12 @@ const build = async function(): Promise<string> {
 		fs.mkdir(path.join(unpackedDir, "tmp")),
 		Utils.copyDir(path.join(__dirname, "node_modules", "7zip-bin"), path.join(unpackedDir, "node_modules", "7zip-bin")),
 	]);
+	const readmeFilename: string = path.join(unpackedDir, "README.txt");
+	const readme: Array<string> = (await fs.readFile(readmeFilename, "utf8")).split(/\r\n|\r|\n/g);
+	readme[0] += Utils.getVersion();
+	await fs.writeFile(readmeFilename, readme.join("\r\n"), "utf8");
 	console.log("Compressing the tool...");
-	await zip(unpackedDir, path.join(buildDir, "iwpo.zip"));
+	await zip(unpackedDir, path.join(buildDir, `iwpo ${Utils.getVersion()}.zip`));
 	console.log("Cleaning residue files...");
 	await fs.unlink(path.join(__dirname, "rh.ini"));
 	return "Success!";

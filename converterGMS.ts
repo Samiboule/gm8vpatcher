@@ -53,6 +53,7 @@ export const ConverterGMS = async function(input: string, gameName: string, serv
 		server,
 		ports.tcp,
 		ports.udp,
+		Utils.getVersion(),
 		path.join(__dirname, "gml")+"/",
 	].map(el => `"${el}"`).join(" "), path.dirname(converter));
 	await fs.unlink(oldDataWin);

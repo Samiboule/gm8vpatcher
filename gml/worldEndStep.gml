@@ -15,7 +15,7 @@ while(socket_read_message(@socket, @buffer)){
 			if(!@found){
 				@oPlayer = instance_create(0, 0, @onlinePlayer);
 				@oPlayer.@ID = @ID;
-				@oPlayer.@name = buffer_read_string(@buffer);;
+				@oPlayer.@name = buffer_read_string(@buffer);
 			}
 			break;
 		case 1:
@@ -31,6 +31,19 @@ while(socket_read_message(@socket, @buffer)){
 					@found = true;
 				}
 			}
+			break;
+		case 2:
+			// INCOMPATIBLE VERSION
+			@lastVersion = buffer_read_string(@buffer);
+			@errorMessage = "Your tool uses the version "+@version+" but the oldest compatible version is "+@lastVersion+". Please update your tool.";
+			#if STUDIO
+				show_message(@errorMessage);
+			#endif
+			#if not STUDIO
+				wd_message_simple(@errorMessage);
+			#endif
+			game_end();
+			exit;
 			break;
 		case 4:
 			// CHAT MESSAGE

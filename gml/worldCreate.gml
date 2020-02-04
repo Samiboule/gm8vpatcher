@@ -5,6 +5,7 @@
 @name = "";
 @selfGameID = "%arg0";
 @server = "%arg1";
+@version = "%arg5";
 #if TEMPFILE
 	if(file_exists("tempOnline")){
 		buffer_read_from_file(@buffer, "tempOnline");
@@ -59,6 +60,7 @@
 	buffer_write_string(@buffer, @name);
 	buffer_write_string(@buffer, @selfGameID);
 	buffer_write_string(@buffer, "%arg4");
+	buffer_write_string(@buffer, @version);
 	socket_write_message(@socket, @buffer);
 	@udpsocket = udpsocket_create();
 	udpsocket_start(@udpsocket, false, 0);

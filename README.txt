@@ -1,4 +1,4 @@
-I wanna play online 1.1.4
+I wanna play online 
 
 Description:
   This software is designed to automatically convert an 'I wanna be the guy' fangame into an online playable version.

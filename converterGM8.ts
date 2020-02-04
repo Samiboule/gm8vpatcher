@@ -20,7 +20,7 @@ import { Font } from "./asset/font"
 import { Timeline } from "./asset/timeline"
 import { GMObject } from "./asset/object"
 import { GMLCode } from "./getGMLCode"
-import { Ports } from "./utils"
+import { Utils, Ports } from "./utils"
 
 export const ConverterGM8 = async function(input: string, gameName: string, server: string, ports: Ports): Promise<void> {
 	console.log("Reading file...");
@@ -287,7 +287,7 @@ export const ConverterGM8 = async function(input: string, gameName: string, serv
 	// Use a specific script name to detect Nikaple's Engine
 	if(scripts.some(script => script && script.name == "audio_togglesoundmuted"))
 		GMLCode.addVariables("NIKAPLE");
-	world.addCreateCode(await GMLCode.getGML("worldCreate", uniqueKey, server, ports.tcp, ports.udp, gameName));
+	world.addCreateCode(await GMLCode.getGML("worldCreate", uniqueKey, server, ports.tcp, ports.udp, gameName, Utils.getVersion()));
 	world.addEndStepCode(await GMLCode.getGML("worldEndStep", player.name, player2 ? player2.name : ""));
 	world.addGameEndCode(await GMLCode.getGML("worldGameEnd"));
 	const newObject = function(name: string, visible: boolean, depth: number, persistent: boolean): GMObject {

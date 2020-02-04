@@ -98,4 +98,7 @@ export class Utils {
 			});
 		});
 	}
+	public static getVersion(): string {
+		return require("./package.json").version;
+	}
 }
