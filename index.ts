@@ -30,12 +30,10 @@ const getServer = async function(): Promise<{server: string, ports: Ports}> {
 		if(arg.slice(0, keyword.length) == keyword){
 			const splits = arg.slice(keyword.length).split(/,/g);
 			server = splits[0];
-			if (splits.length > 1) {
+			if(splits.length > 1)
 				ports.tcp = Number(splits[1]);
-			}
-			if (splits.length > 2) {
+			if(splits.length > 2)
 				ports.udp = Number(splits[2]);
-			}
 			break;
 		}
 	}
