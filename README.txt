@@ -51,6 +51,7 @@ Thank you so much for downloading, I really hope you will have a lot of fun!
 CHANGE LOGS:
 
 1.1.5:
+ - Support for too heavy games
  - Accurate "online players" for the website
  - Destroy player when the change of rooms
  - Fixed saves for Nikaple engine
