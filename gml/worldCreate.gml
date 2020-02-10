@@ -12,6 +12,7 @@
 @selfGameID = "%arg0";
 @server = "%arg1";
 @version = "%arg5";
+@race = false;
 #if TEMPFILE
 	if(file_exists("tempOnline")){
 		buffer_read_from_file(@buffer, "tempOnline");
@@ -20,6 +21,7 @@
 		@selfID = buffer_read_string(@buffer);
 		@name = buffer_read_string(@buffer);
 		@selfGameID = buffer_read_string(@buffer);
+		@race = buffer_read_uint8(@buffer);
 		@n = buffer_read_uint16(@buffer);
 		for(@i = 0; @i < @n; @i += 1){
 			@oPlayer = instance_create(0, 0, @onlinePlayer);
@@ -61,6 +63,13 @@
 		@password = string_copy(@password, 0, 20);
 	}
 	@selfGameID += @password;
+	#if STUDIO
+		@race = show_question("Do you want to enable RACE mod? (shared saves will be disabled)");
+	#endif
+	#if not STUDIO
+		wd_message_set_text("Do you want to enable RACE mod? (shared saves will be disabled)");
+		@race = wd_message_show(wd_mk_information, wd_mb_yes, wd_mb_no, 0) == wd_mb_yes;
+	#endif
 	buffer_clear(@buffer);
 	buffer_write_uint8(@buffer, 3);
 	buffer_write_string(@buffer, @name);

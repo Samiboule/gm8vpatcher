@@ -75,28 +75,30 @@ while(socket_read_message(@socket, @buffer)){
 			break;
 		case 5:
 			// SOMEONE SAVED
-			@sSaved = true;
-			@sGravity = buffer_read_uint8(@buffer);
-			@sName = buffer_read_string(@buffer);
-			@sX = buffer_read_int32(@buffer);
-			@sY = buffer_read_float64(@buffer);
-			@sRoom = buffer_read_int16(@buffer);
-			@a = instance_create(0, 0, @playerSaved);
-			@a.@name = @sName;
-			#if TEMPFILE
-				buffer_clear(@buffer);
-				buffer_write_uint8(@buffer, @sGravity);
-				buffer_write_int32(@buffer, @sX);
-				buffer_write_float64(@buffer, @sY);
-				buffer_write_int16(@buffer, @sRoom);
-				buffer_write_to_file(@buffer, "tempOnline2");
-			#endif
-			#if STUDIO
-				audio_play_sound(@sndSaved, 0, false);
-			#endif
-			#if not STUDIO
-				sound_play(@sndSaved);
-			#endif
+			if(!@race){
+				@sSaved = true;
+				@sGravity = buffer_read_uint8(@buffer);
+				@sName = buffer_read_string(@buffer);
+				@sX = buffer_read_int32(@buffer);
+				@sY = buffer_read_float64(@buffer);
+				@sRoom = buffer_read_int16(@buffer);
+				@a = instance_create(0, 0, @playerSaved);
+				@a.@name = @sName;
+				#if TEMPFILE
+					buffer_clear(@buffer);
+					buffer_write_uint8(@buffer, @sGravity);
+					buffer_write_int32(@buffer, @sX);
+					buffer_write_float64(@buffer, @sY);
+					buffer_write_int16(@buffer, @sRoom);
+					buffer_write_to_file(@buffer, "tempOnline2");
+				#endif
+				#if STUDIO
+					audio_play_sound(@sndSaved, 0, false);
+				#endif
+				#if not STUDIO
+					sound_play(@sndSaved);
+				#endif
+			}
 			break;
 		case 6:
 			// SELF ID

@@ -8,6 +8,7 @@
 		buffer_write_string(@buffer, @selfID);
 		buffer_write_string(@buffer, @name);
 		buffer_write_string(@buffer, @selfGameID);
+		buffer_write_uint8(@buffer, @race);
 		@n = instance_number(@onlinePlayer);
 		buffer_write_uint16(@buffer, @n);
 		for(@i = 0; @i < @n; @i += 1){
