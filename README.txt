@@ -51,18 +51,20 @@ Thank you so much for downloading, I really hope you will have a lot of fun!
 CHANGE LOGS:
 
 1.1.5:
- - Support for too heavy games
+ - Fixed the heap out of memory crash for heavy GM8 games
  - Accurate "online players" for the website
+ - Race mod
  - Destroy player when the change of rooms
  - Fixed saves for Nikaple engine
  - Slightly better player continuity
+ - Games protected by a password are not shown on the website anymore
 
 1.1.4:
  - Support for Nikaple engine
  - Better player continuity
 
 1.1.3:
- - Fixed the heap out of memory crash for heavy studio games
+ - Fixed the heap out of memory crash for heavy GMS games
 
 1.1.2:
  - Fixed a typo in the GameMaker:Studio converter
@@ -75,7 +77,7 @@ CHANGE LOGS:
  - Added password
  - Fixed games that keep asking the username
  - Fixed mixed games
- - Fixed 32 bit compatility
+ - Fixed 32 bit compatility (FAILED)
 
 1.0.0:
  - First release
