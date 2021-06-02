@@ -67,12 +67,12 @@ export class Utils {
 		});
 	}
 	public static rimraf(dir: string): Promise<string> {
-		return new Promise(function(resolve: () => void, reject: (err: NodeJS.ErrnoException) => void): void {
+		return new Promise(function(resolve: (a: undefined) => void, reject: (err: NodeJS.ErrnoException) => void): void {
 			rimraf(dir, function(err): void {
 				if(err)
 					reject(err);
 				else
-					resolve();
+					resolve(undefined);
 			});
 		});
 	}

@@ -20,10 +20,10 @@ const getInputGame = async function(): Promise<string> {
 }
 
 const getServer = async function(): Promise<{server: string, ports: Ports}> {
-	let server: string = "isocodes.org";
+	let server: string = "dappermink.com";
 	let ports: Ports = {
-		tcp: 3003,
-		udp: 3005,
+		tcp: 8002,
+		udp: 8003,
 	}
 	const keyword: string = "server=";
 	for(const arg of process.argv){

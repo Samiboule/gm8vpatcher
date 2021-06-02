@@ -26,7 +26,7 @@ How to use:
 
 Website:
   You can see all the games that are currently played on this website:
-  https://iwpo.isocodes.org
+  https://iwpo.dappermink.com
 
 FAQ:
   Q: Me and my friend can't play [some game] together, the server seems to think we are playing two different games
@@ -49,6 +49,9 @@ Thank you so much for downloading, I really hope you will have a lot of fun!
 
 
 CHANGE LOGS:
+
+1.1.6:
+ - Use the new server (isocodes.org => dappermink.com)
 
 1.1.5:
  - Fixed the heap out of memory crash for heavy GM8 games
