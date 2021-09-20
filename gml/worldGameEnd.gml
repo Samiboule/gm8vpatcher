@@ -1,6 +1,6 @@
 /// ONLINE
 #if TEMPFILE
-	if(!file_exists("temp") && !file_exists("temp.dat")){
+	if(!file_exists("temp") && !file_exists(working_directory+"\save\temp") && !file_exists("temp.dat")){
 		if(file_exists("tempOnline")){
 			file_delete("tempOnline");
 		}
