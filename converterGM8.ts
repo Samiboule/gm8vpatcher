@@ -1,7 +1,6 @@
 import fs from "fs-extra"
 import path from "path"
 import zlib from "zlib"
-import md5 from "md5"
 import { SmartBuffer } from "smart-buffer"
 import { PESection, WindowsIcon, Icon } from "./icon"
 import { GameConfig, GameData } from "./gamedata"
@@ -19,10 +18,8 @@ import { Script } from "./asset/script"
 import { Font } from "./asset/font"
 import { Timeline } from "./asset/timeline"
 import { GMObject } from "./asset/object"
-import { GMLCode } from "./getGMLCode"
-import { Utils, Ports } from "./utils"
 
-export const ConverterGM8 = async function(input: string, gameName: string, server: string, ports: Ports): Promise<void> {
+export const ConverterGM8 = async function(input: string, gameName: string): Promise<void> {
 	console.log("Reading file...");
 	const exe: SmartBuffer = SmartBuffer.fromBuffer(await fs.readFile(input));
 	if(exe.readString(2) != "MZ")
@@ -126,51 +123,6 @@ export const ConverterGM8 = async function(input: string, gameName: string, serv
 		}
 		return getAssetRefs(src).map(toAsset);
 	}
-	const putAssets = function(exe: SmartBuffer, assets: Array<Asset>): Buffer {
-		const data: SmartBuffer = new SmartBuffer();
-		data.writeUInt32LE(assets.length);
-		for(let i: number = 0, n: number = assets.length; i < n; ++i){
-			const tmpData: SmartBuffer = new SmartBuffer();
-			tmpData.writeOffset = 0;
-			tmpData.readOffset = 0;
-			const asset: Asset = assets.shift();
-			if(asset !== null){
-				tmpData.writeBuffer(Buffer.from([1, 0, 0, 0]));
-				asset.serialize(tmpData);
-			}else{
-				tmpData.writeBuffer(Buffer.from([0, 0, 0, 0]));
-			}
-			const tmpData2: Buffer = zlib.deflateSync(tmpData.toBuffer());
-			tmpData.destroy();
-			data.writeUInt32LE(tmpData2.length);
-			data.writeBuffer(tmpData2);
-		}
-		return data.toBuffer();
-	}
-	const replaceChunk = function(exe: SmartBuffer, offsets: [number, number], newData: Buffer): void {
-		const part1: Buffer = exe.toBuffer().subarray(0, offsets[0]);
-		const part2: Buffer = exe.toBuffer().subarray(offsets[1], exe.length);
-		exe.clear();
-		exe.writeOffset = 0;
-		exe.writeBuffer(Buffer.from([...part1, ...newData, ...part2]));
-		exe.readOffset = part1.length+newData.length;
-		exe.writeOffset = exe.readOffset;
-	}
-	const findAsset = function(assets: Array<Asset>, names: Array<string>): Asset {
-		let result: Asset;
-		for(let i: number = 0; i < names.length; ++i){
-			result = assets.filter(asset => asset && asset["name"] == names[i])[0];
-			if(result !== undefined)
-				break;
-		}
-		return result;
-	}
-	const insertGMLScript = function(source: string, code: string) {
-		// For scripts surrounded by `{}`, cannot append directly
-		if(/^\s*\{[\s\S]+\}\s*$/m.test(source))
-			return source.replace(/\}\s*$/, `${code}}`);
-		return source+code;
-	}
 	console.log("Reading game data...");
 	if(exe.readUInt32LE() != 700)
 		throw new Error("Extensions header");
@@ -180,10 +132,8 @@ export const ConverterGM8 = async function(input: string, gameName: string, serv
 	let hasWindowsDialogs: boolean = false;
 	for(let i: number = 0; i < extensionCount; ++i){
 		extensions[i] = Extension.read(exe);
-		if(extensions[i].name == "GM Windows Dialogs")
-			hasWindowsDialogs = true;
-		if(extensions[i].name == "Http Dll 2.3" && extensions[i].folderName == "http_dll_2_3")
-			throw new Error("This game is already an online version");
+		if(extensions[i].name == "Game Maker 8.2 Vpatch")
+			throw new Error("This game is already vpatched");
 	}
 	const addExtension = async function(exe: SmartBuffer, extensions: Array<Extension>, file: string): Promise<void> {
 		const pos: number = exe.readOffset;
@@ -196,9 +146,7 @@ export const ConverterGM8 = async function(input: string, gameName: string, serv
 		exe.readOffset = pos+part2.length;
 		extensions.push(null);
 	}
-	if(!hasWindowsDialogs)
-		await addExtension(exe, extensions, "gm_windows_dialog8");
-	await addExtension(exe, extensions, "http_dll8");
+	await addExtension(exe, extensions, "stutterfix");
 	exe.writeOffset = extensionCountPos;
 	exe.writeUInt32LE(extensions.length);
 	extensions = null;
@@ -223,15 +171,6 @@ export const ConverterGM8 = async function(input: string, gameName: string, serv
 	const soundsOffsets: [number, number] = [exe.readOffset, 0];
 	let sounds: Array<Sound> = getAssets(exe, Sound.deserialize) as Array<Sound>;
 	soundsOffsets[1] = exe.readOffset;
-	const newSound = async function(sounds: Array<Sound>, file: string): Promise<void> {
-		const sound: Sound = new Sound();
-		sound.name = file;
-		sound.content = await fs.readFile(path.join(__dirname, "lib", file));
-		sounds.push(sound);
-	}
-	await newSound(sounds, "sound_chatbox8");
-	await newSound(sounds, "sound_saved8");
-	replaceChunk(exe, soundsOffsets, putAssets(exe, sounds));
 	sounds = null;
 	if(exe.readUInt32LE() != 800)
 		throw new Error("Sprites header");
@@ -255,14 +194,6 @@ export const ConverterGM8 = async function(input: string, gameName: string, serv
 	const fontsOffsets: [number, number] = [exe.readOffset, 0];
 	let fonts: Array<Font> = getAssets(exe, Font.deserialize) as Array<Font>;
 	fontsOffsets[1] = exe.readOffset;
-	const newFont = async function(fonts: Array<Font>, file: string): Promise<void> {
-		const font: Font = new Font();
-		font.name = file;
-		font.content = await fs.readFile(path.join(__dirname, "lib", file));
-		fonts.push(font);
-	}
-	await newFont(fonts, "font_online8");
-	replaceChunk(exe, fontsOffsets, putAssets(exe, fonts));
 	fonts = null;
 	if(exe.readUInt32LE() != 800)
 		throw new Error("Timelines header");
@@ -273,80 +204,12 @@ export const ConverterGM8 = async function(input: string, gameName: string, serv
 	const objectsOffsets: [number, number] = [exe.readOffset, 0];
 	let objects: Array<GMObject> = getAssets(exe, GMObject.deserialize) as Array<GMObject>;
 	objectsOffsets[1] = exe.readOffset;
-	const world: GMObject = findAsset(objects, ["world", "objWorld", "oWorld"]) as GMObject;
-	const player: GMObject = findAsset(objects, ["player", "objPlayer", "oPlayer"]) as GMObject;
-	const player2: GMObject = findAsset(objects, ["player2", "objPlayer2", "oPlayer2"]) as GMObject;
-	if(world == undefined)
-		throw new Error("No object world");
-	if(player == undefined)
-		throw new Error("No object player");
-	GMLCode.addVariables("GM8");
-	GMLCode.addVariables("TEMPFILE");
-	if(player2 != undefined)
-		GMLCode.addVariables("PLAYER2");
-	// Use a specific script name to detect Nikaple's Engine
-	if(scripts.some(script => script && script.name == "audio_togglesoundmuted"))
-		GMLCode.addVariables("NIKAPLE");
-	world.addCreateCode(await GMLCode.getGML("worldCreate", uniqueKey, server, ports.tcp, ports.udp, gameName, Utils.getVersion()));
-	world.addEndStepCode(await GMLCode.getGML("worldEndStep", player.name, player2 ? player2.name : ""));
-	world.addGameEndCode(await GMLCode.getGML("worldGameEnd"));
-	const newObject = function(name: string, visible: boolean, depth: number, persistent: boolean): GMObject {
-		const obj: GMObject = new GMObject();
-		obj.name = name;
-		obj.spriteIndex = -1;
-		obj.solid = false;
-		obj.visible = visible;
-		obj.depth = depth;
-		obj.persistent = persistent;
-		obj.parentIndex = -1;
-		obj.maskIndex = -1;
-		obj.events = [[], [], [], [], [], [], [], [], [], [], [], []];
-		return obj;
-	}
-	const onlinePlayer: GMObject = newObject("__ONLINE_onlinePlayer", false, -10, true);
-	onlinePlayer.addCreateCode(await GMLCode.getGML("onlinePlayerCreate"));
-	onlinePlayer.addEndStepCode(await GMLCode.getGML("onlinePlayerEndStep", player.name, player2 ? player2.name : ""));
-	onlinePlayer.addDrawCode(await GMLCode.getGML("onlinePlayerDraw"));
-	const chatbox: GMObject = newObject("__ONLINE_chatbox", true, -11, true);
-	chatbox.addCreateCode(await GMLCode.getGML("chatboxCreate"));
-	chatbox.addEndStepCode(await GMLCode.getGML("chatboxEndStep", player.name, player2 ? player2.name : ""));
-	chatbox.addDrawCode(await GMLCode.getGML("chatboxDraw"));
-	const playerSaved: GMObject = newObject("__ONLINE_playerSaved", true, -10, false);
-	playerSaved.addEndStepCode(await GMLCode.getGML("playerSavedEndStep"));
-	playerSaved.addDrawCode(await GMLCode.getGML("playerSavedDraw"));
-	objects.push(onlinePlayer);
-	objects.push(chatbox);
-	objects.push(playerSaved);
-	replaceChunk(exe, objectsOffsets, putAssets(exe, objects));
 	objects = null;
-	const saveGame: Script = findAsset(scripts, ["saveGame", "scrSaveGame"]) as Script;
-	const loadGame: Script = findAsset(scripts, ["loadGame", "scrLoadGame"]) as Script;
-	const saveExe: Script = findAsset(scripts, ["saveExe", "scrSaveExe"]) as Script;
-	const tempExe: Script = findAsset(scripts, ["tempExe", "scrTempExe"]) as Script;
-	if(saveGame === undefined)
-		throw new Error("No script saveGame");
-	if(loadGame == undefined)
-		throw new Error("No script loadGame");
-	saveGame.source = insertGMLScript(saveGame.source, await GMLCode.getGML("saveGame", world.name, player.name, player2 ? player2.name : ""));
-	loadGame.source = insertGMLScript(loadGame.source, await GMLCode.getGML("saveGame2", world.name));
-	const loadGameContent: string = await GMLCode.getGML("loadGame", world.name, player.name, player2 ? player2.name : "");
-	if(GMLCode.is("NIKAPLE")){
-		saveExe.source = insertGMLScript(saveExe.source, loadGameContent);
-	}else if(saveExe == undefined && tempExe == undefined){
-		loadGame.source = insertGMLScript(loadGame.source, loadGameContent);
-	}else{
-		if(tempExe !== undefined)
-			tempExe.source = insertGMLScript(tempExe.source, loadGameContent);
-		else
-			saveExe.source = insertGMLScript(saveExe.source, loadGameContent);
-	}
-	replaceChunk(exe, scriptsOffsets, putAssets(exe, scripts));
 	scripts = null;
 	exe.readOffset = encryptionStartGM80;
 	console.log("Encrypting...");
 	GM80.encrypt(exe);
-	settings.save(exe);
 	GameData.encrypt(exe, gameConfig);
 	console.log("Writing...");
-	await fs.writeFile(path.join(path.dirname(input), `${gameName}_online.exe`), exe.toBuffer());
+	await fs.writeFile(path.join(path.dirname(input), `${gameName}_vfix.exe`), exe.toBuffer());
 }

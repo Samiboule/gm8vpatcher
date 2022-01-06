@@ -1,4 +1,5 @@
 import { SmartBuffer } from "smart-buffer"
+const fs = require('fs');
 
 const ARG_MAX = 17;
 const VERSION = 700;
@@ -153,6 +154,19 @@ export class Extension {
 		exe.readUInt32LE();
 		exe.readOffset += contentsLength;
 		ext.content = [...exe.toBuffer().subarray(backupOffset, exe.readOffset)];
+
+		// let endOffset = exe.readOffset
+		// exe.readOffset = backupOffset
+		// let outputExtensionBinary = new SmartBuffer
+		// outputExtensionBinary.writeBuffer(exe.readBuffer(endOffset - backupOffset))
+		// let buff = wawa.toBuffer()
+		// console.log(buff)
+		// fs.writeFile('ext', buff, (err) => {
+      	// 	if (err) throw err;
+      	// 	console.log('The file has been saved!');
+		// });
+		// exe.readOffset = endOffset
+
 		return ext;
 	}
 }
