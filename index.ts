@@ -2,8 +2,8 @@ import fs from "fs-extra"
 import path from "path"
 import process from "process"
 import { ConverterGM8 } from "./converterGM8"
-import { ConverterGMS, IsGMS } from "./converterGMS"
-import { Utils, Ports } from "./utils"
+import { IsGMS } from "./converterGMS"
+import { Utils } from "./utils"
 
 const getInputGame = async function(): Promise<string> {
 	let input: string = "";
@@ -19,38 +19,15 @@ const getInputGame = async function(): Promise<string> {
 	return input;
 }
 
-const getServer = async function(): Promise<{server: string, ports: Ports}> {
-	let server: string = "dappermink.com";
-	let ports: Ports = {
-		tcp: 8002,
-		udp: 8003,
-	}
-	const keyword: string = "server=";
-	for(const arg of process.argv){
-		if(arg.slice(0, keyword.length) == keyword){
-			const splits = arg.slice(keyword.length).split(/,/g);
-			server = splits[0];
-			if(splits.length > 1)
-				ports.tcp = Number(splits[1]);
-			if(splits.length > 2)
-				ports.udp = Number(splits[2]);
-			break;
-		}
-	}
-	return {server, ports};
-}
-
 const main = async function(): Promise<string> {
 	const input: string = await getInputGame();
 	const gameName: string = path.basename(input, ".exe");
-	const {server, ports} = await getServer();
-	console.log(`Using Server ${server}, Ports`, ports);
 	if(await IsGMS(input)){
 		console.log("GameMaker Studio detected!");
-		await ConverterGMS(input, gameName, server, ports);
+		throw new Error("This patch only works on game maker 8 games")
 	}else{
 		console.log("Assuming it is Game Maker 8");
-		await ConverterGM8(input, gameName, server, ports);
+		await ConverterGM8(input, gameName);
 	}
 	return "Success!";
 }
