@@ -159,7 +159,7 @@ export class Extension {
 		// exe.readOffset = backupOffset
 		// let outputExtensionBinary = new SmartBuffer
 		// outputExtensionBinary.writeBuffer(exe.readBuffer(endOffset - backupOffset))
-		// let buff = wawa.toBuffer()
+		// let buff = outputExtensionBinary.toBuffer()
 		// console.log(buff)
 		// fs.writeFile('ext', buff, (err) => {
       	// 	if (err) throw err;
