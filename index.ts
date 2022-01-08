@@ -5,10 +5,17 @@ import { ConverterGM8 } from "./converterGM8"
 import { IsGMS } from "./converterGMS"
 import { Utils } from "./utils"
 
+let quietmode = false
+
 const getInputGame = async function(): Promise<string> {
 	let input: string = "";
 	// console.log(process.argv);
-	if(process.argv.length > 2)
+	if(process.argv.length > 3) {
+		if (process.argv[2] === "-q") {
+			quietmode = true
+			input = process.argv[3];
+		}
+	} else if(process.argv.length > 2)
 		input = process.argv[2];
 	if(input == "")
 		throw new Error("Please drag and drop a game executable on this program in order to use it");
@@ -35,4 +42,4 @@ const main = async function(): Promise<string> {
 main()
 .then(console.log)
 .catch(err => console.log(err.toString()))
-.then(() => Utils.getString("Press enter to quit\n"))
+.then(() => {if (!quietmode) {Utils.getString("Press enter to quit\n")}})
