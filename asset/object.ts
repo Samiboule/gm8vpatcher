@@ -6,7 +6,7 @@ const VERSION: number = 430;
 const VERSION_EVENT: number = 400;
 
 export class GMObject extends Asset {
-	public name: string;
+	public name: Buffer;
 	public spriteIndex: number;
 	public solid: boolean;
 	public visible: boolean;
@@ -17,7 +17,7 @@ export class GMObject extends Asset {
 	public events: Array<Array<[number, Array<CodeAction>]>>;
 	public static deserialize(data: SmartBuffer): GMObject {
 		const object: GMObject = new GMObject();
-		object.name = data.readString(data.readUInt32LE());
+		object.name = data.readBuffer(data.readUInt32LE());
 		if(data.readUInt32LE() != VERSION)
 			throw new Error("Object version is incorrect");
 		object.spriteIndex = data.readInt32LE();
@@ -51,7 +51,7 @@ export class GMObject extends Asset {
 	}
 	public serialize(data: SmartBuffer): void {
 		data.writeUInt32LE(Buffer.from(this.name).length);
-		data.writeString(this.name);
+		data.writeBuffer(this.name);
 		data.writeUInt32LE(VERSION);
 		data.writeInt32LE(this.spriteIndex);
 		data.writeUInt32LE(Number(this.solid));
@@ -73,29 +73,5 @@ export class GMObject extends Asset {
 			}
 			data.writeInt32LE(-1);
 		}
-	}
-	private addCode(GML: string, category: number, value: number): void {
-		if(GML.slice(0, 1) == "\n")
-			GML = GML.slice(1, GML.length);
-		if(GML.slice(0, 2) == "\n\t")
-			GML = GML.slice(2, GML.length);
-		if(GML.slice(0, 3) == "\n\t\t")
-			GML = GML.slice(3, GML.length);
-		if(this.events[category].filter(element => element[0] == value).length == 0)
-			this.events[category].push([value, [CodeAction.pieceOfCode(GML)]]);
-		else
-			this.events[category].filter(element => element[0] == value)[0][1].push(CodeAction.pieceOfCode(GML));
-	}
-	public addCreateCode(GML: string): void {
-		this.addCode(GML, 0, 0);
-	}
-	public addEndStepCode(GML: string): void {
-		this.addCode(GML, 3, 2);
-	}
-	public addDrawCode(GML: string): void {
-		this.addCode(GML, 8, 0);
-	}
-	public addGameEndCode(GML: string): void {
-		this.addCode(GML, 7, 3);
 	}
 }

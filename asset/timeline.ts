@@ -6,11 +6,11 @@ const VERSION: number = 500;
 const VERSION_MOMENT: number = 400;
 
 export class Timeline extends Asset {
-	public name: string;
+	public name: Buffer;
 	public moments: Array<[number, Array<CodeAction>]>;
 	public static deserialize(data: SmartBuffer): Timeline {
 		const timeline: Timeline = new Timeline();
-		timeline.name = data.readString(data.readUInt32LE());
+		timeline.name = data.readBuffer(data.readUInt32LE());
 		if(data.readUInt32LE() != VERSION)
 			throw new Error("Timeline version is incorrect");
 		const momentCount: number = data.readUInt32LE();

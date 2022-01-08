@@ -14,12 +14,12 @@ export class CodeAction {
 	public actionIDX: number;
 	public canBeRelative: number;
 	public appliesToSomething: boolean;
-	public fnName: string;
-	public fnCode: string;
+	public fnName: Buffer;
+	public fnCode: Buffer;
 	public paramCount: number;
 	public paramTypes: Array<number>;
-	public paramStrings: Array<string>;
-	public static pieceOfCode(GML: string): CodeAction {
+	public paramStrings: Array<Buffer>;
+	public static pieceOfCode(GML: Buffer): CodeAction {
 		const codeAction: CodeAction = new CodeAction();
 		codeAction.libID = 1;
 		codeAction.id = 603;
@@ -28,8 +28,8 @@ export class CodeAction {
 		codeAction.isCondition = false;
 		codeAction.appliesToSomething = true;
 		codeAction.actionIDX = 2;
-		codeAction.fnName = "";
-		codeAction.fnCode = "";
+		codeAction.fnName = Buffer.from("", "hex");
+		codeAction.fnCode = Buffer.from("", "hex");
 		codeAction.paramCount = 1;
 		codeAction.paramTypes = [1, 0, 0, 0, 0, 0, 0, 0];
 		codeAction.appliesTo = -1;
@@ -51,8 +51,8 @@ export class CodeAction {
 		codeAction.isCondition = data.readUInt32LE() != 0;
 		codeAction.appliesToSomething = data.readUInt32LE() != 0;
 		codeAction.actionIDX = data.readUInt32LE();
-		codeAction.fnName = data.readString(data.readUInt32LE());
-		codeAction.fnCode = data.readString(data.readUInt32LE());
+		codeAction.fnName = data.readBuffer(data.readUInt32LE());
+		codeAction.fnCode = data.readBuffer(data.readUInt32LE());
 		codeAction.paramCount = data.readUInt32LE();
 		if(codeAction.paramCount > PARAM_COUNT)
 			throw new Error("Param count too large");
@@ -67,7 +67,7 @@ export class CodeAction {
 			throw new Error("CodeAction param count 2 is incorrect");
 		codeAction.paramStrings = new Array(PARAM_COUNT);
 		for(let i: number = 0; i < PARAM_COUNT; ++i)
-			codeAction.paramStrings[i] = data.readString(data.readUInt32LE());
+			codeAction.paramStrings[i] = data.readBuffer(data.readUInt32LE());
 		codeAction.invertCondition = data.readUInt32LE() != 0;
 		return codeAction;
 	}
@@ -81,9 +81,9 @@ export class CodeAction {
 		data.writeUInt32LE(Number(this.appliesToSomething));
 		data.writeUInt32LE(this.actionIDX);
 		data.writeUInt32LE(Buffer.from(this.fnName).length);
-		data.writeString(this.fnName);
+		data.writeBuffer(this.fnName);
 		data.writeUInt32LE(Buffer.from(this.fnCode).length);
-		data.writeString(this.fnCode);
+		data.writeBuffer(this.fnCode);
 		data.writeUInt32LE(this.paramCount);
 		data.writeUInt32LE(PARAM_COUNT);
 		for(let i: number = 0, n: number = this.paramTypes.length; i < n; ++i)
@@ -93,7 +93,7 @@ export class CodeAction {
 		data.writeUInt32LE(PARAM_COUNT);
 		for(let i: number = 0, n: number = this.paramStrings.length; i < n; ++i){
 			data.writeUInt32LE(Buffer.from(this.paramStrings[i]).length);
-			data.writeString(this.paramStrings[i]);
+			data.writeBuffer(this.paramStrings[i]);
 		}
 		data.writeUInt32LE(Number(this.invertCondition));
 	}
