@@ -22,18 +22,18 @@ const TriggerKindFrom = function(n: number): TriggerKind {
 }
 
 export class Trigger extends Asset {
-	public name: string;
-	public condition: string;
+	public name: Buffer;
+	public condition: Buffer;
 	public moment: TriggerKind;
-	public constantName: string;
+	public constantName: Buffer;
 	public static deserialize(data: SmartBuffer): Trigger {
 		if(data.readUInt32LE() != VERSION)
 			throw new Error("Trigger version is incorrect");
 		const trigger: Trigger = new Trigger();
-		trigger.name = data.readString(data.readUInt32LE());
-		trigger.condition = data.readString(data.readUInt32LE());
+		trigger.name = data.readBuffer(data.readUInt32LE());
+		trigger.condition = data.readBuffer(data.readUInt32LE());
 		trigger.moment = TriggerKindFrom(data.readUInt32LE());
-		trigger.constantName = data.readString(data.readUInt32LE());
+		trigger.constantName = data.readBuffer(data.readUInt32LE());
 		return trigger;
 	}
 	public serialize(data: SmartBuffer): void {

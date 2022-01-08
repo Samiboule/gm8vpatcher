@@ -5,13 +5,13 @@ const VERSION1: number = 710;
 const VERSION2: number = 800;
 
 export class Background extends Asset {
-	public name: string;
+	public name: Buffer;
 	public width: number;
 	public height: number;
 	public data: Array<number>;
 	public static deserialize(data: SmartBuffer): Background {
 		const background: Background = new Background();
-		background.name = data.readString(data.readUInt32LE());
+		background.name = data.readBuffer(data.readUInt32LE());
 		if(data.readUInt32LE() != VERSION1)
 			throw new Error("Background version1 is incorrect");
 		if(data.readUInt32LE() != VERSION2)

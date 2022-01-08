@@ -4,15 +4,15 @@ import { Asset } from "../asset"
 const VERSION: number = 800;
 
 export class Font extends Asset {
-	public name: string;
+	public name: Buffer;
 	public content: Array<number>;
 	public static deserialize(data: SmartBuffer): Font {
 		const from: number = data.readOffset;
 		const font: Font = new Font();
-		font.name = data.readString(data.readUInt32LE());
+		font.name = data.readBuffer(data.readUInt32LE());
 		if(data.readUInt32LE() != VERSION)
 			throw new Error("Font version is incorrect");
-		const sysName = data.readString(data.readUInt32LE());
+		const sysName = data.readBuffer(data.readUInt32LE());
 		const size = data.readUInt32LE();
 		const bold = data.readUInt32LE() != 0;
 		const italic = data.readUInt32LE() != 0;

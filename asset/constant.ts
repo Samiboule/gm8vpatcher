@@ -1,4 +1,4 @@
 export interface Constant {
-	name: string;
-	expression: string;
+	name: Buffer;
+	expression: Buffer;
 }

@@ -25,14 +25,14 @@ const ConnectionKindFrom = function(n: number): ConnectionKind {
 }
 
 export class Path extends Asset {
-	public name: string;
+	public name: Buffer;
 	public connection: ConnectionKind;
 	public precision: number;
 	public closed: boolean;
 	public points: Array<Point>;
 	public static deserialize(data: SmartBuffer): Path {
 		const path: Path = new Path();
-		path.name = data.readString(data.readUInt32LE());
+		path.name = data.readBuffer(data.readUInt32LE());
 		if(data.readUInt32LE() != VERSION)
 			throw new Error("Path version is incorrect");
 		path.connection = ConnectionKindFrom(data.readUInt32LE());

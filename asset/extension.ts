@@ -5,10 +5,10 @@ const ARG_MAX = 17;
 const VERSION = 700;
 
 interface ExtFile {
-	name: string;
+	name: Buffer;
 	kind: FileKind;
-	initializer: string;
-	finalizer: string;
+	initializer: Buffer;
+	finalizer: Buffer;
 	functions: Array<FileFunction>;
 	constants: Array<FileConst>;
 }
@@ -50,8 +50,8 @@ const FunctionValueKindFrom = function(n: number): FunctionValueKind {
 }
 
 interface FileFunction {
-	name: string;
-	externalName: string;
+	name: Buffer;
+	externalName: Buffer;
 	convention: CallingConvention;
 	id: number;
 	argCount: number;
@@ -60,8 +60,8 @@ interface FileFunction {
 }
 
 interface FileConst {
-	name: string;
-	value: string;
+	name: Buffer;
+	value: Buffer;
 }
 
 enum CallingConvention {
@@ -85,8 +85,8 @@ const CallingConventionFrom = function(n: number): CallingConvention {
 }
 
 export class Extension {
-	public name: string;
-	public folderName: string;
+	public name: Buffer;
+	public folderName: Buffer;
 	public files: Array<ExtFile>;
 	public content: Array<number>;
 	public static read(exe: SmartBuffer): Extension {
@@ -94,24 +94,24 @@ export class Extension {
 		const backupOffset: number = exe.readOffset;
 		if(exe.readUInt32LE() != VERSION)
 			throw new Error("Extension version is incorrect");
-		ext.name = exe.readString(exe.readUInt32LE());
-		ext.folderName = exe.readString(exe.readUInt32LE());
+		ext.name = exe.readBuffer(exe.readUInt32LE());
+		ext.folderName = exe.readBuffer(exe.readUInt32LE());
 		const fileCount = exe.readUInt32LE();
 		ext.files = new Array(fileCount);
 		for(let i: number = 0; i < fileCount; ++i){
 			if(exe.readUInt32LE() != VERSION)
 				throw new Error("Extension file version is incorrect");
-			const name: string = exe.readString(exe.readUInt32LE());
+			const name: Buffer = exe.readBuffer(exe.readUInt32LE());
 			const kind: FileKind = FileKindFrom(exe.readUInt32LE());
-			const initializer: string = exe.readString(exe.readUInt32LE());
-			const finalizer: string = exe.readString(exe.readUInt32LE());
+			const initializer: Buffer = exe.readBuffer(exe.readUInt32LE());
+			const finalizer: Buffer = exe.readBuffer(exe.readUInt32LE());
 			const functionCount: number = exe.readUInt32LE();
 			const functions: Array<FileFunction> = new Array(functionCount);
 			for(let j: number = 0; j < functionCount; ++j){
 				if(exe.readUInt32LE() != VERSION)
 					throw new Error("Extension file function version is incorrect");
-				const name: string = exe.readString(exe.readUInt32LE());
-				const externalName: string = exe.readString(exe.readUInt32LE());
+				const name: Buffer = exe.readBuffer(exe.readUInt32LE());
+				const externalName: Buffer = exe.readBuffer(exe.readUInt32LE());
 				const convention: CallingConvention = CallingConventionFrom(exe.readUInt32LE());
 				const id: number = exe.readUInt32LE();
 				const argCount: number = exe.readUInt32LE();
@@ -134,8 +134,8 @@ export class Extension {
 			for(let j: number = 0; j < constCount; ++j){
 				if(exe.readUInt32LE() != VERSION)
 					throw new Error("Extension file constant version is incorrect");
-				const name: string = exe.readString(exe.readUInt32LE());
-				const value: string = exe.readString(exe.readUInt32LE());
+				const name: Buffer = exe.readBuffer(exe.readUInt32LE());
+				const value: Buffer = exe.readBuffer(exe.readUInt32LE());
 				constants[j] = {
 					name: name,
 					value: value,

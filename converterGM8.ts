@@ -132,7 +132,7 @@ export const ConverterGM8 = async function(input: string, gameName: string): Pro
 	let hasWindowsDialogs: boolean = false;
 	for(let i: number = 0; i < extensionCount; ++i){
 		extensions[i] = Extension.read(exe);
-		if(extensions[i].name == "Game Maker 8.2 Vpatch")
+		if(extensions[i].name == Buffer.from("Game Maker 8.2 Vpatch", "ascii"))
 			throw new Error("This game is already vpatched");
 	}
 	const addExtension = async function(exe: SmartBuffer, extensions: Array<Extension>, file: string): Promise<void> {
@@ -159,8 +159,8 @@ export const ConverterGM8 = async function(input: string, gameName: string): Pro
 	const constantCount: number = exe.readUInt32LE();
 	const constants: Array<Constant> = new Array(constantCount);
 	for(let i: number = 0; i < constantCount; ++i){
-		const name: string = exe.readString(exe.readUInt32LE());
-		const expression: string = exe.readString(exe.readUInt32LE());
+		const name: Buffer = exe.readBuffer(exe.readUInt32LE());
+		const expression: Buffer = exe.readBuffer(exe.readUInt32LE());
 		constants[i] = {
 			name: name,
 			expression: expression,

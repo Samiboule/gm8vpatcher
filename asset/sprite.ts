@@ -22,7 +22,7 @@ interface CollisionMap {
 }
 
 export class Sprite extends Asset {
-	public name: string;
+	public name: Buffer;
 	public originX: number;
 	public originY: number;
 	public frames: Array<Frame>;
@@ -30,7 +30,7 @@ export class Sprite extends Asset {
 	public perFrameColliders: boolean;
 	public static deserialize(data: SmartBuffer): Sprite {
 		const sprite: Sprite = new Sprite();
-		sprite.name = data.readString(data.readUInt32LE());
+		sprite.name = data.readBuffer(data.readUInt32LE());
 		if(data.readUInt32LE() != VERSION)
 			throw new Error("Sprite version is incorrect");
 		sprite.originX = data.readInt32LE();

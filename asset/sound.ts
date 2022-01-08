@@ -33,17 +33,17 @@ interface SoundFX {
 }
 
 export class Sound extends Asset {
-	public name: string;
+	public name: Buffer;
 	public content: Array<number>;
 	public static deserialize(data: SmartBuffer): Sound {
 		const from: number = data.readOffset;
 		const sound: Sound = new Sound();
-		sound.name = data.readString(data.readUInt32LE());
+		sound.name = data.readBuffer(data.readUInt32LE());
 		if(data.readUInt32LE() != VERSION)
 			throw new Error("Sound version is incorrect");
 		const kind = SoundKindFrom(data.readUInt32LE());
-		const extension = data.readString(data.readUInt32LE());
-		const source = data.readString(data.readUInt32LE());
+		const extension = data.readBuffer(data.readUInt32LE());
+		const source = data.readBuffer(data.readUInt32LE());
 		let soundData = null;
 		if(data.readUInt32LE() != 0){
 			const length: number = data.readUInt32LE();
